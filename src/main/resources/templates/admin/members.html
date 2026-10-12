@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>화담 관리자</title>
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon_gray.png}">
+    <link rel="stylesheet" th:href="@{/css/admin/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/members.css}">
+</head>
+<body>
+
+    <div class="admin-wrapper">
+        
+        <aside th:replace="~{admin/sidebar :: sidebarFragment}"></aside>
+
+        <main class="admin-content">
+            <header class="content-header">
+                <h1>회원 관리 <small>Member Management</small></h1>
+            </header>
+
+            <div class="tab-container" th:data-current-tab="${tab}">
+                <button class="tab-btn"
+                    th:classappend="${tab == null || tab == 'search'} ? 'active' : ''"
+                    th:onclick="|location.href='@{/admin/members(tab='search', page=1, searchType=${page.searchType}, keyword=${page.keyword})}'|">
+                    회원 조회</button>
+                <button class="tab-btn"
+                    th:classappend="${tab == 'analysis'} ? 'active' : ''"
+                    th:onclick="|location.href='@{/admin/members(tab='analysis', page=1, searchType=${page.searchType}, keyword=${page.keyword})}'|">
+                    회원 통계</button>
+            </div>
+
+            <div id="member-search" class="content-container">
+                <form th:action="@{/admin/members}" method="GET" class="filter-box">
+                    <input type="hidden" name="tab" th:value="${tab}">
+                    <input type="hidden" name="page" value="1">
+                    <select name="searchType" class="category">
+                        <option value="all">전체목록</option>
+                        <option value="username">아이디</option>
+                        <option value="nickname">닉네임</option>
+                        <option value="name">이름</option>
+                        <option value="email">이메일</option>
+                        <option value="phone">전화번호</option>
+                    </select>
+                    <input name="keyword" class="search-input" placeholder="검색어 입력">
+                    <button type="submit" class="btn-primary">검색</button>
+                </form>
+            </div>
+
+            <div id="member-analysis" class="content-container" hidden>
+                <form th:action="@{/admin/members}" th:object="${analysis}" id="memberFilterForm" method="GET" class="filter-box">
+                    <input type="hidden" name="tab" th:value="${tab}">
+                    <input type="hidden" name="page" value="1">
+                    <div class="filter-row">
+                        <label class="filter-label">가입일</label>
+                        <div class="btn-group">
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="today" id="s0"><label for="s0">오늘</label>
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="7" id="s1"><label for="s1">7일</label>
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="30" id="s2"><label for="s2">1개월</label>
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="90" id="s3"><label for="s3">3개월</label>
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="180" id="s4"><label for="s4">6개월</label>
+                            <input type="radio" name="signedAt" th:field="*{signedAt}" value="365" id="s5"><label for="s5">1년</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-row"><label class="filter-label">나이</label>
+                        <div class="btn-group">
+                            <th:block th:each="age : *{ageList}">
+                                <input type="checkbox" name="birthdays" th:value="${age.code}" th:id="${'skin_' + age.code}" th:checked="${age.checked}">
+                                <label th:for="${'skin_' + age.code}" th:text="${age.label}"></label>
+                            </th:block>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row"><label class="filter-label">성별</label>
+                        <div class="btn-group">
+                            <input type="radio" name="gender" th:field="*{gender}" value="male" id="g1"><label for="g1">남</label>
+                            <input type="radio" name="gender" th:field="*{gender}" value="female" id="g2"><label for="g2">여</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-row"><label class="filter-label">권한</label>
+                        <div class="btn-group">
+                            <input type="radio" name="role" th:field="*{role}" value="user" id="r1"><label for="r1">일반</label>
+                            <input type="radio" name="role" th:field="*{role}" value="admin" id="r2"><label for="r2">관리자</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-row"><label class="filter-label">상태</label>
+                        <div class="btn-group">
+                            <input type="radio" name="status" th:field="*{status}" value="normal" id="st1"><label for="st1">정상</label>
+                            <input type="radio" name="status" th:field="*{status}" value="deleted" id="st2"><label for="st2">탈퇴</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-row"><label class="filter-label">피부</label>
+                        <div class="btn-group">
+                            <th:block th:each="skinType : *{skinTypeList}">
+                                <input type="checkbox" name="skinTypes" th:value="${skinType.code}" th:id="${'skin_' + skinType.code}" th:checked="${skinType.checked}">
+                                <label th:for="${'skin_' + skinType.code}" th:text="${skinType.label}"></label>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <div class="filter-row"><label class="filter-label">퍼스널컬러</label>
+                        <div class="btn-group">
+                            <th:block th:each="personalColor : *{personalColorList}">
+                                <input type="checkbox" name="personalColors" th:value="${personalColor.code}" th:id="${'skin_' + personalColor.code}" th:checked="${personalColor.checked}">
+                                <label th:for="${'skin_' + personalColor.code}" th:text="${personalColor.label}"></label>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <div class="filter-row">
+                        <label class="filter-label">포인트</label>
+                        <input type="number" name="minPoint" th:field="*{minPoint}" min="0" placeholder="최소"> ~
+                        <input type="number" name="maxPoint" th:field="*{maxPoint}" placeholder="최대">
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="button" id="resetBtn">초기화</button>
+                        <button type="submit" class="btn-primary">검색</button>
+                    </div>
+                </form>
+
+               <div class="stat-container" th:if="${analysis.hasSearchCondition()}">
+                    <div class="stat-header">
+                        총 검색 결과: <span class="total-count" th:text="${page.totalCount + '명'}"></span>
+                    </div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-column" th:if="${stats.genderStats != null and !#maps.isEmpty(stats.genderStats)}">
+                            <h4 class="stat-title">성별</h4>
+                            <div class="stat-row"><span>남</span> <span th:text="${(stats.genderStats['남'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>여</span> <span th:text="${(stats.genderStats['여'] ?: 0) + '명'}"></span></div>
+                        </div>
+                        <div class="stat-column" th:if="${stats.roleStats != null and !#maps.isEmpty(stats.roleStats)}">
+                            <h4 class="stat-title">권한</h4>
+                            <div class="stat-row"><span>일반</span> <span th:text="${(stats.roleStats['USER'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>관리자</span> <span th:text="${(stats.roleStats['ADMIN'] ?: 0) + '명'}"></span></div>
+                        </div>
+                        <div class="stat-column" th:if="${stats.statusStats != null and !#maps.isEmpty(stats.statusStats)}">
+                            <h4 class="stat-title">상태</h4>
+                            <div class="stat-row"><span>정상</span> <span th:text="${(stats.statusStats['normal'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>탈퇴</span> <span th:text="${(stats.statusStats['deleted'] ?: 0) + '명'}"></span></div>
+                        </div>
+                        <div class="stat-column" th:if="${stats.skinTypeStats != null and !#maps.isEmpty(stats.skinTypeStats)}">
+                            <h4 class="stat-title">피부 타입</h4>
+                            <div class="stat-row"><span>중성</span> <span th:text="${(stats.skinTypeStats['중성'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>건성</span> <span th:text="${(stats.skinTypeStats['건성'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>지성</span> <span th:text="${(stats.skinTypeStats['지성'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>민감성</span> <span th:text="${(stats.skinTypeStats['민감성'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>복합성</span> <span th:text="${(stats.skinTypeStats['복합성'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>수부지</span> <span th:text="${(stats.skinTypeStats['수부지'] ?: 0) + '명'}"></span></div>
+                        </div>
+                        <div class="stat-column" th:if="${stats.personalColorStats != null and !#maps.isEmpty(stats.personalColorStats)}">
+                            <h4 class="stat-title">퍼스널 컬러</h4>
+                            <div class="stat-row"><span>봄웜</span> <span th:text="${(stats.personalColorStats['봄웜'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>가을웜</span> <span th:text="${(stats.personalColorStats['가을웜'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>여름쿨</span> <span th:text="${(stats.personalColorStats['여름쿨'] ?: 0) + '명'}"></span></div>
+                            <div class="stat-row"><span>겨울쿨</span> <span th:text="${(stats.personalColorStats['겨울쿨'] ?: 0) + '명'}"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-div">
+                <div class="controls-wrapper">
+                    <div class="action-buttons">
+                        <span id="checkInfo"></span>
+                        <button id="modifySkinType" class="btn-action hidden"
+                            data-update-type="skinType">피부 일괄변경</button>
+                        <button id="modifyPersonalColor" class="btn-action hidden"
+                            data-update-type="personalColor">컬러 일괄변경</button>
+                        <button id="modifyPoint" class="btn-action hidden"
+                            data-update-type="point">포인트 일괄변경</button>
+                        <button id="modifyRole" class="btn-action hidden"
+                            data-update-type="role">등급 일괄변경</button>
+                        <button id="modifyStatus" class="btn-action hidden"
+                            data-update-type="status">상태 일괄변경</button>
+                    </div>
+                    <div id="batchPopover" class="popover hidden">
+                        <div class="popover-content">
+                            <select id="popoverSelect" class="category hidden"></select> 
+                            <input type="number" id="popoverInput" class="popover-input hidden" placeholder="포인트 입력">
+                            <button id="popoverConfirm" class="btn-primary">확인</button>
+                        </div>
+                    </div>
+                    <button id="registerBtn" onclick="openRegisterModal()" class="btn-primary">회원 등록</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input id="all-check" type="checkbox"></th>
+                                <th>
+                                    <a th:href="@{/admin/members(
+                                        tab=${tab},page=${page.page}, searchType=${page.searchType}, keyword=${page.keyword},
+                                        signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                                        gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                                        skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                                        minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                                        sort='username', dir=${page.sort == 'username' && page.dir == 'desc' ? 'asc' : 'desc'})}"
+                                        th:classappend="${page.dir !=null && page.sort == 'username' ? page.dir : ''}"
+                                        class="sort-link">아이디
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/members(
+                                        tab=${tab},page=${page.page}, searchType=${page.searchType}, keyword=${page.keyword},
+                                        signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                                        gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                                        skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                                        minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                                        sort='name', dir=${page.sort == 'name' && page.dir == 'desc' ? 'asc' : 'desc'})}"
+                                        th:classappend="${page.dir !=null && page.sort == 'name' ? page.dir : ''}"
+                                        class="sort-link">이름
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/members(
+                                        tab=${tab},page=${page.page}, searchType=${page.searchType}, keyword=${page.keyword},
+                                        signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                                        gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                                        skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                                        minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                                        sort='nickname',dir=${page.sort == 'nickname' && page.dir == 'desc' ? 'asc' : 'desc'})}"
+                                        th:classappend="${page.dir !=null && page.sort == 'nickname' ? page.dir : ''}"
+                                        class="sort-link">닉네임
+                                    </a>
+                                </th>
+                                <th>생년월일</th>
+                                <th>성별</th>
+                                <th>이메일</th>
+                                <th>전화번호</th>
+                                <th>피부</th>
+                                <th>컬러</th>
+                                <th>
+                                    <a th:href="@{/admin/members(
+                                        tab=${tab},page=${page.page}, searchType=${page.searchType}, keyword=${page.keyword},
+                                        signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                                        gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                                        skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                                        minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                                        sort='point', dir=${page.sort == 'point' && page.dir == 'desc' ? 'asc' : 'desc'})}"
+                                        th:classappend="${page.dir !=null && page.sort == 'point' ? page.dir : ''}"
+                                        class="sort-link">포인트
+                                    </a>
+                                </th>
+                                <th>
+                                    <a th:href="@{/admin/members(
+                                        tab=${tab},page=${page.page}, searchType=${page.searchType}, keyword=${page.keyword},
+                                        signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                                        gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                                        skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                                        minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                                        sort='signedAt', dir=${page.sort == 'signedAt' && page.dir == 'desc' ? 'asc' : 'desc'})}"
+                                        th:classappend="${page.dir !=null && page.sort == 'signedAt' ? page.dir : ''}"
+                                        class="sort-link">가입일
+                                    </a>
+                                </th>
+                                <th>등급</th>
+                                <th>상태</th>
+                                <th>기능</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="member : ${members}">
+                                <td><input class="member-check" type="checkbox"></td>
+                                <td th:text="${member.username}"></td>
+                                <td th:text="${member.name}"></td>
+                                <td th:text="${member.nickname}"></td>
+                                <td th:text="${member.birthday}"></td>
+                                <td th:text="${member.gender}"></td>
+                                <td th:text="${member.email}"></td>
+                                <td th:text="${member.phone}"></td>
+                                <td th:text="${member.skinType}"></td>
+                                <td th:text="${member.personalColor}"></td>
+                                <td th:text="${member.point}"></td>
+                                <td th:text="${#temporals.format(member.signedAt, 'yyyy-MM-dd')}"></td>
+                                <td th:text="${member.role}"></td>
+                                <td th:text="${member.status}"></td>
+                                <td>
+                                    <button th:attr="data-username=${member.username}"
+                                        onclick="openDetailModal(this.dataset.username)"
+                                        class="btn-view">보기</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" th:if="${page.totalPage}">
+                    <button th:if="${page.prev}"
+                        th:onclick="|location.href='@{/admin/members(tab=${tab}, page=${page.startPage - 1},
+                            searchType=${page.searchType}, keyword=${page.keyword},
+                            signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                            gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                            skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                            minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint})}'|"
+                        class="page-btn">&lt;</button>
+                    
+                    <th:block th:each="num : ${#numbers.sequence(page.startPage, page.endPage)}">
+                        <button th:onclick="|location.href='@{/admin/members(
+                            tab=${tab}, page=${num}, searchType=${page.searchType}, keyword=${page.keyword},
+                            signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                            gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                            skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                            minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint},
+                            sort=${page.sort}, dir=${page.dir})}'|"
+                            th:text="${num}" th:classappend="${page.page == num} ? 'page-btn active' : 'page-btn'"></button>
+                    </th:block>
+
+                    <button th:if="${page.next}"
+                        th:onclick="|location.href='@{/admin/member(tab=${tab}, page=${page.endPage + 1},
+                            searchType=${page.searchType}, keyword=${page.keyword},
+                            signedAt=${analysis.signedAt}, birthdays=${analysis.birthdays},
+                            gender=${analysis.gender}, role=${analysis.role}, status=${analysis.status},
+                            skinTypes=${analysis.skinTypes}, personalColors=${analysis.personalColors},
+                            minPoint=${analysis.minPoint}, maxPoint=${analysis.maxPoint})}'|"
+                            class="page-btn">&gt;</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h2>회원 등록</h2>
+            <form id="registerForm" th:action="@{/admin/members/register}" method="post">
+                <div class="form-group full-width">
+                    <label>아이디</label>
+                    <div class="input-with-btn">
+                        <input type="text" id="username" name="username" placeholder="영어와 숫자 조합 (최대 16자)" pattern="^[a-zA-Z0-9]+$" required autofocus>
+                        <button type="button" class="check-btn">중복확인</button>
+                    </div>
+                    <span id="usernameError" class="error-text"></span>
+                </div>
+                <div class="form-group full-width">
+                    <label>비밀번호</label>
+                    <input type="password" id="password" name="password" placeholder="영어와 숫자 조합 (최소 8자)" minlength="8" required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" id="name" name="name" placeholder="이름 (10자 이하)" maxlength="10" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>닉네임</label>
+                        <input type="text" id="nickname" name="nickname" placeholder="닉네임 (12자 이하)" maxlength="12" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>생년월일</label>
+                        <input type="date" id="birthday" name="birthday" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>성별</label>
+                        <div class="radio-group">
+                            <label for="male"><input type="radio" name="gender" id="gender" value="남" required>남</label>
+                            <label for="female"><input type="radio" name="gender" id="gender" value="여" required>여</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>피부타입</label>
+                        <select id="skinType" name="skinType" required>
+                            <option>중성</option>
+                            <option>건성</option>
+                            <option>지성</option>
+                            <option>민감성</option>
+                            <option>복합성</option>
+                            <option>수부지</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>퍼스널 컬러</label>
+                        <select id="personalColor" name="personalColor" required>
+                            <option>봄웜</option>
+                            <option>가을웜</option>
+                            <option>여름쿨</option>
+                            <option>겨울쿨</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="email" name="email" placeholder="example@naver.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="phone" name="phone" placeholder="010-1234-5678"
+                            pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>포인트</label>
+                        <input type="number" id="point" name="point" placeholder="포인트 입력 (0 이상)" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>등급</label>
+                        <select id="role" name="role" required>
+                            <option value="USER">일반</option>
+                            <option value="ADMIN">관리자</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="btn-footer">
+                    <button type="button" class="btn-cancel" onclick="closeRegisterModal()">취소</button>
+                    <button type="submit" class="btn-primary">등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <h2>회원 정보</h2>
+            <form id="detailForm" th:action="@{/admin/members/modify}" method="post">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>아이디</label>
+                        <input type="text" id="detailUsername" name="username" readOnly>
+                    </div>
+                    <div class="form-group">
+                        <label>상태</label>
+                        <select id="detailStatus" name="status">
+                            <option value="normal">정상</option>
+                            <option value="deleted">탈퇴</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" id="detailName" name="name" readOnly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>닉네임</label>
+                        <input type="text" id="detailNickname" name="nickname" readOnly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>생년월일</label>
+                        <input type="date" id="detailBirthday" name="birthday" readOnly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>성별</label>
+                        <input type="text" id="detailGender" name="gender" readOnly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>피부타입</label>
+                        <select id="detailSkinType" name="skinType" required>
+                            <option>중성</option>
+                            <option>건성</option>
+                            <option>지성</option>
+                            <option>민감성</option>
+                            <option>복합성</option>
+                            <option>수부지</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>퍼스널 컬러</label>
+                        <select id="detailPersonalColor" name="personalColor" required>
+                            <option>봄웜</option>
+                            <option>가을웜</option>
+                            <option>여름쿨</option>
+                            <option>겨울쿨</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="detailEmail" name="email" readOnly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="detailPhone" name="phone" readOnly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>포인트</label>
+                        <input type="number" id="detailPoint" name="point" placeholder="포인트 입력 (0 이상)" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>등급</label>
+                        <select id="detailRole" name="role" required>
+                            <option value="USER">일반</option>
+                            <option value="ADMIN">관리자</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="btn-footer">
+                    <button type="button" class="btn-cancel" onclick="closeDetailModal()">취소</button>
+                    <button type="submit" class="btn-primary">수정</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/admin/members.js}"></script>
+
+</body>
+</html>

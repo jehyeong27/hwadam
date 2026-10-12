@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${qna.title} + ' : 화담'"></title>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/community/community_detail.css}">
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+</head>
+<body>
+
+    <header th:replace="~{layout/header :: headerFragment}"></header>
+
+    <main class="detail-layout">
+        
+        <section class="detail-container">
+            
+            <div class="post-header">
+                <div class="post-category">커뮤니티</div>
+                <h1 class="post-title" th:text="${qna.title}"></h1>
+                
+                <div class="post-meta-info">
+                    <div class="meta-left">
+                        <span class="meta-author" th:text="|${nickname} (${qna.username})|"></span>
+                        <span class="meta-divider">|</span>
+                        <div class="meta-tags">
+                            <span class="meta-tag" th:text="|[${infoTag.skinType}]|"></span>
+                            <span class="meta-tag" th:text="|[${infoTag.personalColor}]|"></span>
+                            <span class="meta-tag" th:text="|[${ageGroup}]|"></span>
+                        </div>
+                    </div>
+                    <div class="meta-right">
+                        <span>조회수</span> <span th:text="${qna.viewCnt}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="post-content" th:text="${qna.content}">
+            </div>
+
+            <!-- 첨부파일 -->
+        <div class="info-box" th:if="${flist != null and !#lists.isEmpty(flist)}">
+            <!-- <span class="label">첨부파일</span> -->
+            <div class="preview-list">
+                                
+                <div  th:each="file : ${flist}">
+                    <div class="preview-item">
+
+                            <!-- 이미지 파일만 출력 -->
+                        <img th:if="${#strings.endsWith(
+                    file.originalName.toLowerCase(),
+                    '.jpg')
+                or
+                #strings.endsWith(
+                    file.originalName.toLowerCase(),
+                    '.jpeg')
+                or
+                #strings.endsWith(
+                    file.originalName.toLowerCase(),
+                    '.png')
+                or
+                #strings.endsWith(
+                    file.originalName.toLowerCase(),
+                    '.gif')}" th:src="@{/download/{id}(id=${file.savedName})}">
+
+                    </div>
+                    <div>
+                        <!-- 다운로드는 모두 가능. 이전에는 file.id를 넘겼다가 변경 -->
+                        <a th:href="@{/download/{id}(id=${file.savedName})}"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="post-like-section">
+                <button type="button" class="btn-like" id="btnLike">
+                    <span class="like-icon" id="like-icon" th:data-id="${qna.boardId}">♡</span>
+                    <span class="like-count" id="like-count" th:data-id="${likecnt}" th:text="${likecnt}"></span>
+                </button>
+            </div>
+
+            <div class="post-actions">
+                <div class="action-left">
+                    <a th:href="@{/community}" class="btn btn-list">목록으로</a>
+                </div>
+                <div class="action-right" id="action-field" th:data-id="${qna.boardId}">
+                    <a th:href="@{|/community/edit/${qna.boardId}|}" class="btn btn-modify">수정</a>
+                    <button type="submit" class="btn btn-delete" th:onclick="|deleteBoard(${qna.boardId})|" style="display: inline;">삭제</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="comment-section">
+            <h3>댓글 <span id="replyCount"></span></h3>
+    
+            <div class="comment-input-area">
+                <textarea id="comment-content" placeholder="댓글을 남겨보세요." rows="2"></textarea>
+
+                <div class="comment-btn-group">
+                    <button id="comment-submit" type="submit" class="btn btn-comment-submit">등록</button>
+                </div>
+            </div>
+            
+
+            <div class="comment-list">
+                
+            </div>
+        </section>
+
+    </main>
+
+    <footer th:replace="~{layout/footer :: footerFragment}"></footer>
+
+</body>
+</html>
+<script th:src="@{/js/qna/qna_delete.js}"></script>
+<script th:src="@{/js/qna/qna_like.js}"></script>
+<script th:src="@{/js/qna/qna_check_id.js}"></script>
+<script th:src="@{/js/qna/qna_reply.js}"></script>

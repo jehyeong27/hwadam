@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화담 : 글쓰기</title>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/community/community_write.css}">
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+</head>
+<body>
+
+    <header th:replace="~{layout/header :: header}"></header>
+
+    <main>
+        <section class="write-container">
+            <div class="section-header">
+                <h2> 수정하기 </h2>
+            </div>
+
+            <form th:action="@{/community/update}" method="post" enctype="multipart/form-data">
+
+                <input type="hidden" name="boardId" th:value="${qnaEdit.boardId}">
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="post-category">카테고리</label>
+                        <select id="post-category" name="category" class="form-control" required>
+                            <option value="" disabled selected>카테고리를 선택해주세요</option>
+                            <option value="자유"
+                                    th:selected="${category == '자유'}">자유</option>
+                            <option value="질문"
+                                    th:selected="${category == '질문'}">질문</option>
+                            <option value="꿀팁"
+                                    th:selected="${category == '꿀팁'}">꿀팁</option>
+                            <option value="공지사항"
+                                    th:selected="${category == '공지사항'}">공지사항</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="post-title">제목</label>
+                    <input type="text" id="post-title" name="title" class="form-control" th:value="${qnaEdit.title}">
+                </div>
+
+                <div class="form-group">
+                    <label for="post-content">내용</label>
+                    <textarea id="post-content" name="content" class="form-control" th:text="${qnaEdit.content}"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 첨부</label>
+                    <label for="file-input" class="file-upload-wrapper" id="dropZone">
+                        <input type="file" id="file-input" multiple name="selectedFiles" accept=".jpg,.jpeg,.png,.gif,.webp">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">클릭하거나 파일을 여기로 드래그하여 업로드</span>
+                        <span class="upload-hint">JPG, PNG, GIF 파일 가능 (최대 10MB)</span>
+                    </label>
+
+                    <!-- 이미지 미리보기 -->
+                    <div id="previewList" class="preview-list" th:data-id="${qnaEdit.boardId}"></div>
+
+                    <!-- 일반 파일 목록 -->
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" th:onclick="|location.href='@{/community}'|">취소하기</button>
+                    <button type="submit" class="btn btn-submit">수정하기</button>
+                </div>
+
+            </form>
+        </section>
+    </main>
+
+    <footer th:replace="~{layout/footer :: footer}"></footer>
+
+    <script th:src="@{/js/qna/qna_edit_file.js}"></script>
+</body>
+</html>

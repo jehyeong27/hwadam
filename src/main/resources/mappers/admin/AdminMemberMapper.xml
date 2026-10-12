@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.admin.AdminMemberMapper">
+
+    <!-- 등록된 멤버 수 계산 -->
+    <!-- 단일 검색 조건에 따른 페이지 번호를 위해 동적 쿼리 추가 -->
+    <select id="countMembers"
+            parameterType="com.miles.beauminity.vo.admin.AdminPageVO"
+            resultType="long">
+
+        SELECT count(*)
+        FROM member
+        <where>
+            <choose>
+                <when test="searchType != null and searchType == 'username'">
+                    AND username = #{keyword}
+                </when>
+                <when test="searchType != null and searchType == 'nickname'">
+                    AND nickname LIKE concat('%', #{keyword}, '%')
+                </when>
+                <when test="searchType != null and searchType == 'name'">
+                    AND name LIKE concat('%', #{keyword}, '%')
+                </when>
+                <when test="searchType != null and searchType == 'email'">
+                    AND email = #{keyword}
+                </when>
+                <when test="searchType != null and searchType == 'phone'">
+                    AND phone = #{keyword}
+                </when>
+            </choose>
+        </where>
+
+    </select>
+
+    <!-- 회원 목록 출력 (회원 조회용) -->
+    <!-- 단일 검색 조건에 따른 회원 목록을 출력하기 위해 동적 쿼리 추가 -->
+    <select id="selectMembers"
+            parameterType="com.miles.beauminity.vo.admin.AdminPageVO"
+            resultType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        SELECT *
+        FROM member
+        <where>
+            <choose>
+                <when test="searchType != null and searchType == 'username'">
+                    AND username = #{keyword}
+                </when>
+                <when test="searchType != null and searchType == 'nickname'">
+                    AND nickname LIKE concat('%', #{keyword}, '%')
+                </when>
+                <when test="searchType != null and searchType == 'name'">
+                    AND name LIKE concat('%', #{keyword}, '%')
+                </when>
+                <when test="searchType != null and searchType == 'email'">
+                    AND email = #{keyword}
+                </when>
+                <when test="searchType != null and searchType == 'phone'">
+                    AND phone = #{keyword}
+                </when>
+            </choose>
+        </where>
+        <choose>
+            <when test="sort != null and sort == 'username'">
+                ORDER BY username ${dir}
+            </when>
+            <when test="sort != null and sort == 'name'">
+                ORDER BY name ${dir}
+            </when>
+            <when test="sort != null and sort == 'nickname'">
+                ORDER BY nickname ${dir}
+            </when>
+            <when test="sort != null and sort == 'point'">
+                ORDER BY point ${dir}
+            </when>
+            <when test="sort != null and sort == 'signedAt'">
+                ORDER BY signed_at ${dir}
+            </when>
+        </choose>
+        LIMIT #{offset}, #{size}
+
+    </select>
+
+    <!-- 등록된 멤버 수 계산 -->
+    <!-- 다중 검색 조건에 따른 페이지 번호를 위해 동적 쿼리 추가 -->
+    <select id="countAnalysisMember"
+            parameterType="com.miles.beauminity.vo.admin.AdminMemberConditionVO"
+            resultType="long">
+
+        SELECT count(*)
+        FROM member
+        <where>
+            <!-- 가입일 필터링 (오늘, 7일전,...)-->
+            <choose>
+                <when test="signedAt != null and signedAt == 'today'">
+                    AND signed_at = NOW()
+                </when>
+                <when test="signedAt != null and signedAt != ''">
+                    AND signed_at >= DATE_SUB(NOW(), INTERVAL #{signedAt} DAY)
+                </when>
+            </choose>
+            <!-- 나이 필터링 (10대, 20대,...)-->
+            <if test="birthdays != null and birthdays.size() > 0">
+                AND (
+                    <foreach item="birthday" collection="birthdays" separator="or">
+                        <choose>
+                            <when test="birthday != null and birthday == '60'">
+                                (YEAR(CURDATE()) - YEAR(birthday)) >= 60
+                            </when>
+                            <otherwise>
+                                (YEAR(CURDATE()) - YEAR(birthday)) BETWEEN #{birthday} AND #{birthday} + 9
+                            </otherwise>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 성별 필터링 -->
+            <choose>
+                <when test="gender != null and gender == 'male'">
+                    AND gender = '남'
+                </when>
+                <when test="gender != null and gender == 'female'">
+                    AND gender = '여'
+                </when>
+            </choose>
+            <!-- 권한 필터링 -->
+            <if test="role != null and (role == 'user' or role == 'admin')">
+                AND role = #{role}
+            </if>
+            <!-- 상태 필터링 -->
+            <if test="status != null and (status == 'normal' or status == 'deleted')">
+                AND status = #{status}
+            </if>
+            <!-- 피부 타입 필터링 -->
+            <if test="skinTypes != null and skinTypes.size() > 0">
+                AND (
+                    <foreach item="skinType" collection="skinTypes" separator="or">
+                        <choose>
+                            <when test="skinType != null and skinType == 'normal'">
+                                skin_type = '중성'
+                            </when>
+                            <when test="skinType != null and skinType == 'dry'">
+                                skin_type = '건성'
+                            </when>
+                            <when test="skinType != null and skinType == 'oily'">
+                                skin_type = '지성'
+                            </when>
+                            <when test="skinType != null and skinType == 'sensitive'">
+                                skin_type = '민감성'
+                            </when>
+                            <when test="skinType != null and skinType == 'combination'">
+                                skin_type = '복합성'
+                            </when>
+                            <when test="skinType != null and skinType == 'dehydrated'">
+                                skin_type = '수부지'
+                            </when>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 퍼스널 컬러 필터링 -->
+            <if test="personalColors != null and personalColors.size() > 0">
+                AND (
+                    <foreach item="personalColor" collection="personalColors" separator="or">
+                        <choose>
+                            <when test="personalColor != null and personalColor == 'spring'">
+                                personal_color = '봄웜'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'fail'">
+                                personal_color = '가을웜'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'summer'">
+                                personal_color = '여름쿨'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'winter'">
+                                personal_color = '겨울쿨'
+                            </when>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 포인트 필터링 -->
+            <if test="minPoint != null and maxPoint != null">
+                AND point BETWEEN #{minPoint} AND #{maxPoint}
+            </if>
+        </where>
+    
+    </select>
+
+    <!-- SQL 프래그먼트 적용 -->
+    <!-- limit 절만 제거하여 통계에 사용하기 위함 -->
+    <!-- 다중 검색 조건에 따른 회원 목록을 출력하기 위한 동적 쿼리 추가-->
+    <sql id="selectAnlaysisMembersBase">
+
+        SELECT *
+        FROM member
+        <where>
+            <!-- 가입일 필터링 (오늘, 7일전,...)-->
+            <choose>
+                <when test="analysisVO.signedAt != null and analysisVO.signedAt == 'today'">
+                    AND signed_at = NOW()
+                </when>
+                <when test="analysisVO.signedAt != null and analysisVO.signedAt != ''">
+                    AND signed_at >= DATE_SUB(NOW(), INTERVAL #{analysisVO.signedAt} DAY)
+                </when>
+            </choose>
+            <!-- 나이 필터링 (10대, 20대,...)-->
+            <if test="analysisVO.birthdays != null and analysisVO.birthdays.size() > 0">
+                AND (
+                    <foreach item="birthday" collection="analysisVO.birthdays" separator="or">
+                        <choose>
+                            <when test="birthday != null and birthday == '60'">
+                                (YEAR(CURDATE()) - YEAR(birthday)) >= 60
+                            </when>
+                            <otherwise>
+                                (YEAR(CURDATE()) - YEAR(birthday)) BETWEEN #{birthday} AND #{birthday} + 9
+                            </otherwise>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 성별 필터링 -->
+            <choose>
+                <when test="analysisVO.gender != null and analysisVO.gender == 'male'">
+                    AND gender = '남'
+                </when>
+                <when test="analysisVO.gender != null and analysisVO.gender == 'female'">
+                    AND gender = '여'
+                </when>
+            </choose>
+            <!-- 권한 필터링 -->
+            <if test="analysisVO.role != null and (analysisVO.role == 'user' or analysisVO.role == 'admin')">
+                AND role = #{analysisVO.role}
+            </if>
+            <!-- 상태 필터링 -->
+            <if test="analysisVO.status != null and (analysisVO.status == 'normal' or analysisVO.status == 'deleted')">
+                AND status = #{analysisVO.status}
+            </if>
+            <!-- 피부 타입 필터링 -->
+            <if test="analysisVO.skinTypes != null and analysisVO.skinTypes.size() > 0">
+                AND (
+                    <foreach item="skinType" collection="analysisVO.skinTypes" separator="or">
+                        <choose>
+                            <when test="skinType != null and skinType == 'normal'">
+                                skin_type = '중성'
+                            </when>
+                            <when test="skinType != null and skinType == 'dry'">
+                                skin_type = '건성'
+                            </when>
+                            <when test="skinType != null and skinType == 'oily'">
+                                skin_type = '지성'
+                            </when>
+                            <when test="skinType != null and skinType == 'sensitive'">
+                                skin_type = '민감성'
+                            </when>
+                            <when test="skinType != null and skinType == 'combination'">
+                                skin_type = '복합성'
+                            </when>
+                            <when test="skinType != null and skinType == 'dehydrated'">
+                                skin_type = '수부지'
+                            </when>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 퍼스널 컬러 필터링 -->
+            <if test="analysisVO.personalColors != null and analysisVO.personalColors.size() > 0">
+                AND (
+                    <foreach item="personalColor" collection="analysisVO.personalColors" separator="or">
+                        <choose>
+                            <when test="personalColor != null and personalColor == 'spring'">
+                                personal_color = '봄웜'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'fail'">
+                                personal_color = '가을웜'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'summer'">
+                                personal_color = '여름쿨'
+                            </when>
+                            <when test="personalColor != null and personalColor == 'winter'">
+                                personal_color = '겨울쿨'
+                            </when>
+                        </choose>
+                    </foreach>
+                )
+            </if>
+            <!-- 포인트 필터링 -->
+            <if test="analysisVO.minPoint != null and analysisVO.maxPoint != null">
+                AND point BETWEEN #{analysisVO.minPoint} AND #{analysisVO.maxPoint}
+            </if>
+        </where>
+
+    </sql>
+
+    <!-- 회원 목록 출력 (회원 통계용)-->
+    <select id="selectAnalysisMembers"
+            resultType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        <include refid="selectAnlaysisMembersBase"/>
+        <choose>
+            <when test="pageVO.sort != null and pageVO.sort == 'username'">
+                ORDER BY username ${pageVO.dir}
+            </when>
+            <when test="pageVO.sort != null and pageVO.sort == 'name'">
+                ORDER BY name ${pageVO.dir}
+            </when>
+            <when test="pageVO.sort != null and pageVO.sort == 'nickname'">
+                ORDER BY nickname ${pageVO.dir}
+            </when>
+            <when test="pageVO.sort != null and pageVO.sort == 'point'">
+                ORDER BY point ${pageVO.dir}
+            </when>
+            <when test="pageVO.sort != null and pageVO.sort == 'signedAt'">
+                ORDER BY signed_at ${pageVO.dir}
+            </when>
+        </choose>
+        LIMIT #{pageVO.offset}, #{pageVO.size}
+
+    </select>
+
+    <select id="selectAnalysisAllMember"
+            parameterType="com.miles.beauminity.vo.admin.AdminMemberConditionVO"
+            resultType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        <include refid="selectAnlaysisMembersBase"/>
+    
+    </select>
+
+    <!-- 한 명의 회원 정보 검색 -->
+    <select id="getMemberInfo"
+            parameterType="String"
+            resultType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        SELECT *
+        FROM member
+        WHERE username = #{username}
+
+    </select>
+
+    <!-- 새로운 회원 등록 (관리자용)-->
+    <!-- 관리자용에선 회원의 포인트와 등급을 설정해 추가할 수 있다. -->
+    <insert id="insertMember"
+            parameterType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        INSERT INTO member(
+            username,
+            grade_id,
+            password,
+            nickname,
+            name,
+            birthday,
+            gender,
+            email,
+            phone,
+            skin_type,
+            personal_color,
+            point,
+            role
+        ) VALUES (
+            #{username},
+            #{gradeId},
+            #{password},
+            #{nickname},
+            #{name},
+            #{birthday},
+            #{gender},
+            #{email},
+            #{phone},
+            #{skinType},
+            #{personalColor},
+            #{point},
+            #{role}
+        )
+
+    </insert>
+
+    <!-- 한 명의 회원 정보 수정 -->
+    <update id="updateMemberInfo"
+            parameterType="com.miles.beauminity.vo.admin.AdminMemberVO">
+
+        UPDATE member
+        SET
+            skin_type = #{skinType},
+            personal_color = #{personalColor},
+            point = #{point},
+            role = #{role},
+            status = #{status}
+        WHERE username = #{username}
+    
+    </update>
+
+    <!-- 여러 명의 회원 정보 수정 -->
+    <update id="updateMembersInfo"
+            parameterType="com.miles.beauminity.vo.admin.AdminMemberBatchVO">
+
+        UPDATE member
+        <set>
+            <if test="modifyType != null and modifyType == 'skinType'">
+                skin_type = #{value}
+            </if>
+            <if test="modifyType != null and modifyType == 'personalColor'">
+                personal_color = #{value}
+            </if>
+            <if test="modifyType != null and modifyType == 'point'">
+                point = #{point}
+            </if>
+            <if test="modifyType != null and modifyType == 'role'">
+                role = #{value}
+            </if>
+            <if test="modifyType != null and modifyType == 'status'">
+                status = #{value}
+            </if>
+        </set>
+        WHERE username IN
+        <foreach item="username" collection="usernames" open="(" separator="," close=")">
+            #{username}
+        </foreach>
+
+    </update>
+
+</mapper>

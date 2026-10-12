@@ -1,0 +1,126 @@
+.register-container {
+    max-width: 390px;
+    margin: 80px auto;
+    padding: 40px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* 로고 및 타이틀 섹션 */
+.logo-section {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.logo-section img {
+    width: 200px;
+}
+
+/* 입력 창 그룹 */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.flex-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-box {
+    flex: 1;
+    text-align: left;
+}
+
+.input-box label,
+.input-group label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.85em;
+    margin-bottom: 5px;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.check-btn {
+    margin-top: 22px;
+    padding: 0 15px;
+    background: #eee;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+#toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 71%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-wrapper { 
+    position: relative;
+    width: 100%; 
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+    padding: 10px 15px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.radio-group input {
+    width: auto;
+    margin: 0;
+}
+
+.register-btn {
+    width: 100%;
+    padding: 14px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+
+#has-msg {
+    margin-bottom: 0;
+}
+
+#has-msg-around {
+    margin-top: 15px;
+}
+
+.error-text {
+    color: #FFA1C1;
+    font-size: 0.8rem;
+    display: block;
+}

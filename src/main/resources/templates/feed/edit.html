@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>화담 : 화장 고치기</title>
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}" />
+    <link rel="stylesheet" th:href="@{/css/feed/feed_edit.css}"/>
+    <link rel="stylesheet" th:href="@{/css/common/header.css}" />
+  </head>
+
+  <body>
+    <header th:replace="~{layout/header :: header}"></header>
+
+    <main class="feed-edit-main">
+      <div class="page-wrap">
+        <div class="write-head">
+          <div class="write-title">
+            <h1>✎ 오늘의 화장 수정</h1>
+            <span>
+              사진, 본문, 링크, 해시태그를 원하는 분위기에 맞게 다시
+              다듬어보세요.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="back-link"
+            onclick="location.href = '/feed'"
+          >
+            피드로 돌아가기
+          </button>
+        </div>
+
+        <div class="notice">
+          <b>꿀팁</b> · 정보공유 게시판 링크를 함께 첨부하면 사용한 제품이나
+          자세한 후기를 더 쉽게 공유할 수 있어요.
+        </div>
+
+        <div class="edit-grid">
+          <!-- 왼쪽 미리보기 영역 -->
+          <section class="preview-card">
+            <div class="preview-photo">
+              <div class="tilt-photo" id="main-preview-box">
+                <img
+                  id="main-preview-image"
+                  alt="대표 이미지 미리보기"
+                  style="display: none"
+                />
+                <span id="main-preview-text">대표 이미지 미리보기</span>
+              </div>
+            </div>
+
+            <div class="preview-info">
+              <strong>대표 사진 미리보기</strong>
+              <p>첫 번째 사진이 해당 피드의 대표 이미지로 설정됩니다.</p>
+            </div>
+
+            <!-- 기존 이미지 목록: List<String> 기준 -->
+            <div class="current-image-list" id="current-image-list">
+              <div
+                class="current-image"
+                th:each="savedName, stat : ${feed.feedFileList}"
+                th:classappend="${stat.index == 0 ? 'is-main' : ''}"
+                th:data-saved-name="${savedName}"
+                data-image-type="existing"
+              >
+                <img
+  th:src="@{|/upload/feed/${savedName}|}"
+  alt="기존 피드 이미지"
+/>
+
+                <button
+                  type="button"
+                  class="current-image-delete-btn"
+                  th:data-saved-name="${savedName}"
+                >
+                  ×
+                </button>
+
+                <!-- 중요: 이 영역은 form 밖이라 form 속성으로 연결해야 서버로 넘어감 -->
+                <input
+                  type="hidden"
+                  name="existingImages"
+                  th:value="${savedName}"
+                  form="feedEditForm"
+                />
+              </div>
+            </div>
+          </section>
+
+          <!-- 오른쪽 수정 폼 영역 -->
+          <section class="form-card">
+            <form
+              id="feedEditForm"
+              method="post"
+              enctype="multipart/form-data"
+              th:data-content="${feed.feedContent}"
+            >
+              <input
+                type="hidden"
+                th:if="${_csrf != null}"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"
+              />
+
+              <div class="form-group">
+                <label class="form-label">피드 이미지</label>
+
+                <div class="upload-box">
+                  <div>이미지를 드래그 하세요</div>
+                  <div>또는</div>
+
+                  <button type="button" class="upload-btn" id="image-add-btn">
+                    + 이미지 추가
+                  </button>
+
+                  <input
+                    type="file"
+                    name="files"
+                    id="fileInput"
+                    multiple
+                    accept="image/*"
+                    style="display: none"
+                  />
+                </div>
+
+                <div
+                  class="image-count image-current-count"
+                  id="image-current-count"
+                >
+                  0 / 5
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">본문</label>
+
+                <textarea
+  id="editFeedContent"
+  name="feedContent"
+  th:text="${feed.feedContent}"
+  placeholder="오늘의 화장을 소개해주세요."
+></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">해시태그</label>
+
+                <div class="tag-row">
+                  <input
+                    type="text"
+                    id="tagInput"
+                    placeholder="예: 톤업크림 입력 후 Enter"
+                  />
+
+                  <button type="button" class="tag-add-btn">등록</button>
+                </div>
+
+                <div class="hint">
+                  해시태그는 최소 3개 이상, 최대 5개 이하로 입력해주세요.
+                </div>
+
+                <!-- 기존 해시태그 목록: List<String> 기준 -->
+                <div class="tag-list" id="tag-list">
+                  <span
+                    class="tag-chip"
+                    th:each="tagName : ${feed.feedTagList}"
+                    th:data-tag="${tagName}"
+                  >
+                    <span th:text="'#' + ${tagName}">#태그</span>
+
+                    <button
+                      type="button"
+                      class="tag-delete-btn"
+                      th:data-tag-name="${tagName}"
+                    >
+                      ×
+                    </button>
+
+                    <!-- 수정 시 서버에서 tagNames로 받기 위해 이름 통일 -->
+                    <input
+                      type="hidden"
+                      name="tagNames"
+                      th:value="${tagName}"
+                    />
+                  </span>
+                </div>
+
+                <div
+                  class="image-count tag-count"
+                  th:text="|${feed.feedTagList != null ? #lists.size(feed.feedTagList) : 0} / 5|"
+                >
+                  0 / 5
+                </div>
+              </div>
+
+              <div class="line"></div>
+
+              <div class="actions">
+                <button type="button" class="cancel" onclick="history.back()">
+                  취소
+                </button>
+
+                <button type="submit" class="submit">수정 완료</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <script th:src="@{/js/feed/feed_edit.js}"></script>
+  </body>
+</html>

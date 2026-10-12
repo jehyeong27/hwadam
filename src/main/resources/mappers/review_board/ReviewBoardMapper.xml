@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper 
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.review_board.ReviewBoardMapper">
+<!--=================================
+리뷰 게시판에 관련된 쿼리문을 작성하는 매퍼
+=====================================--> 
+
+
+    <insert id="insertReviewBoard">
+        INSERT INTO review_board (
+            board_id,
+            product_name,
+            product_link,
+            product_image,
+            category1,
+            category2
+        ) VALUES (
+            #{boardId},
+            #{productName},
+            #{productLink},
+            #{productImage},
+            #{category1},
+            #{category2}
+        )
+    </insert>
+
+   
+
+    <select id="selectReviewBoardList" 
+            resultType="com.miles.beauminity.vo.review.ReviewBoardVO">
+        SELECT 
+            m.board_id,
+            m.username,
+            mem.nickname,
+            m.title,
+            m.content,
+            m.created_at,
+            m.edited_at,
+            m.view_cnt,
+            m.reply_cnt,
+            r.product_name,
+            r.product_link,
+            r.product_image,
+            r.category1,
+            r.category2
+        FROM master_board m
+        INNER JOIN review_board r on m.board_id = r.board_id
+        INNER JOIN member mem on m.username = mem.username 
+        WHERE m.board_type = 'review' AND m.deleted = 0
+        ORDER BY m.board_id desc;
+    </select>
+
+    <select id="selectReviewBoardDetail" 
+            parameterType="long"
+            resultType="com.miles.beauminity.vo.review.ReviewBoardVO">
+            SELECT 
+                m.board_id,
+                m.username,
+                mem.nickname,
+                m.title,
+                m.content,
+                m.created_at,
+                m.edited_at,
+                m.view_cnt,
+                m.reply_cnt,
+                r.product_name,
+                r.product_link,
+                r.product_image,
+                r.category1,
+                r.category2
+            FROM master_board m
+            INNER JOIN review_board r ON m.board_id = r.board_id
+            INNER JOIN member mem ON m.username = mem.username
+            WHERE m.board_id = #{boardId}
+    </select>
+
+    <update id="updateReviewBoardFile" 
+            parameterType="com.miles.beauminity.vo.board.MasterBoardFileVO">
+        UPDATE board_file
+        SET
+            original_name = #{originalName},
+            saved_name = #{savedName},
+            file_path = #{filePath},
+            file_type = #{fileType},
+            file_size = #{fileSize}
+        WHERE
+            file_id = #{fileId}
+    </update>
+
+    <select id="getProductnameByBoardId"
+            parameterType="Long"
+            resultType="String">
+            
+        SELECT product_name
+            FROM review_board
+            where board_id=#{value}
+
+    </select>
+
+    <select id="getProductCategory1ByBoardId"
+            parameterType="Long"
+            resultType="String">
+        
+        SELECT 
+            category1
+        FROM review_board
+        WHERE board_id = #{value}
+
+    </select>
+    
+    <select id="getProductCategory2ByBoardId"
+        parameterType="Long"
+        resultType="String">
+
+        SELECT category2
+        FROM review_board
+        WHERE board_id = #{value}
+    </select>
+
+   <select id="getTypeBoardCountWithSearch" resultType="int">
+        SELECT COUNT(*) 
+        FROM master_board m
+        INNER JOIN review_board r ON m.board_id = r.board_id
+        WHERE m.board_type = #{type}
+        AND m.deleted = 0   -- 💥 이 조건이 반드시 있어야 합니다!
+        
+        <if test="search.category1 != null and search.category1 != '' and search.category1 != '전체보기'">
+            AND r.category1 = #{search.category1}
+        </if>
+        <if test="search.category2 != null and search.category2 != '' and search.category2 != '전체'">
+            AND r.category2 = #{search.category2}
+        </if>
+        
+        <if test="search.keyword != null and search.keyword != ''">
+            <choose>
+                <when test="search.searchType == 'product'">
+                    AND r.product_name LIKE CONCAT('%', #{search.keyword}, '%')
+                </when>
+                <when test="search.searchType == 'nickname'">
+                    -- 여기서 닉네임 검색을 하려면 member 테이블과 조인이 필요합니다!
+                    -- 혹은 master_board에 username이 있으니 닉네임 조인을 추가하세요.
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="getReviewBoardListWithSearch" 
+            resultType="com.miles.beauminity.vo.review.ReviewBoardVO">
+
+            SELECT 
+                m.board_id AS boardId,
+                mem.nickname AS nickName,
+                mem.skin_type AS skinType,
+                mem.personal_color AS personalColor, 
+                mem.birthday,
+                mf.file_path AS memberProfilePath,
+                mf.saved_name AS memberProfileSavedName,
+                m.title AS title,
+                m.content AS content,
+                m.created_at AS createdAt,
+                m.view_cnt AS viewCnt,
+                m.reply_cnt AS replyCnt,
+                bf.saved_name AS savedName, -- C드라이브에서 불러올 때 사용할 저장된 파일명(업로드 파일 수신용)
+                r.product_name AS productName,
+                r.category1, 
+                r.category2
+            FROM member mem 
+            INNER JOIN master_board m ON mem.username = m.username
+            INNER JOIN review_board r ON m.board_id = r.board_id
+            LEFT JOIN member_profile mf ON mem.username = mf.username
+            LEFT JOIN board_file bf ON bf.file_id = (
+                -- 해당 게시글의 파일들 중 가장 첫 번째 파일 ID 하나만 조회하는 서브쿼리
+                SELECT MIN(file_id) 
+                FROM board_file 
+                WHERE board_id = m.board_id 
+            )
+            <where>
+                m.board_type = #{type}
+                AND m.deleted = 0
+                
+                <if test="search.category1 != null and search.category1 != '' and search.category1 != '전체보기'">
+                    AND r.category1 = #{search.category1}
+                </if>
+                
+                <if test="search.category2 != null and search.category2 != '' and search.category2 != '전체'">
+                    AND r.category2 = #{search.category2}
+                </if>
+                
+                <if test="search.keyword != null and search.keyword != ''">
+
+                    <choose>
+                        <when test="search.searchType == 'product'">
+                            AND r.product_name LIKE CONCAT('%', #{search.keyword}, '%')
+                        </when>
+                        <when test="search.searchType == 'nickname'">
+                            AND mem.nickname LIKE CONCAT('%', #{search.keyword}, '%')
+                        </when>
+                    </choose>
+                    
+                </if>
+            </where>
+            
+            <choose>
+                <when test="search.sortType == 'hits'">
+                    ORDER BY m.view_cnt DESC, m.board_id DESC
+                </when>
+                <otherwise>
+                    ORDER BY m.created_at DESC, m.board_id DESC
+                </otherwise>
+            </choose>
+            
+            LIMIT #{pageVO.offset}, #{pageVO.size}
+    </select>
+    
+    <!--사용자 본인의 리뷰 리스트 가져오기-->
+    <select id="getReviewList"
+            parameterType="string">
+        SELECT
+            
+            rb.product_name,
+            rb.board_id,
+            rb.category1,
+            rb.category2,
+            mb.title,
+            mb.content,
+            mb.created_at,
+            mb.view_cnt,
+            mb.reply_cnt
+    
+        FROM review_board rb
+        JOIN master_board mb
+            on rb.board_id = mb.board_id
+        WHERE deleted=0 and mb.username=#{username}
+        ORDER BY mb.created_at DESC
+    </select>
+    
+    <!--조회수 높은 리뷰 가져오기-->
+    <select id="getTopReviewList"
+            resultType="com.miles.beauminity.vo.review.ReviewBoardVO">
+        SELECT
+            
+            rb.product_name,
+            rb.board_id,
+            rb.category1,
+            rb.category2,
+            mb.title,
+            mb.content,
+            mb.created_at,
+            mb.view_cnt,
+            mb.reply_cnt,
+            bf.saved_name AS savedName
+            
+
+    
+        FROM review_board rb
+        JOIN master_board mb
+            on rb.board_id = mb.board_id
+        JOIN board_file bf
+            on rb.board_id=bf.board_id
+        WHERE deleted=0 
+        ORDER BY mb.view_cnt DESC
+
+    </select>
+            
+</mapper>

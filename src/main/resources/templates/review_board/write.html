@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화담 : 리뷰 작성</title>
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}">
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/review_board/review_common.css}">
+    <link rel="stylesheet" th:href="@{/css/review_board/review_write.css}">
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+</head>
+<style>
+/* ==========================================================================
+   리뷰 등록 페이지 (제공된 :root 변수 기반 var() 함수 적용)
+   ========================================================================== */
+
+/* 1. 전체 중심 정렬 상자 (네이버 블로그처럼 중앙에 정갈하게 배치) */
+.write-container {
+    max-width: 850px;       /* 너무 넓지도 좁지도 않은 딱 좋은 가로폭 */
+    margin: 50px auto;      /* 위아래 50px 여백, 좌우는 알아서 가운데 정렬 */
+    padding: 40px;          /* 상자 안쪽 여백을 넓게 주어 시원한 느낌 */
+    background-color: var(--bg); /* 하얀색 바탕 */
+    border: 1px solid var(--line); /* 은은한 회색 테두리 */
+    border-radius: 12px;    /* 모서리를 부드럽게 라운딩 */
+}
+
+/* 2. 대제목 영역 */
+.write-header {
+    margin-bottom: 35px;     /* 제목 아래 공간 확보 */
+    border-bottom: 2px solid var(--pink); /* 제목 밑에 화사한 핑크색 바 */
+    padding-bottom: 15px;    /* 선과 글자 사이의 여백 */
+}
+
+.write-header h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text);      /* 진한 텍스트 색상 */
+}
+
+/* 3. 각 입력창 한 줄씩 묶어주는 세로 여백 */
+.form-row {
+    margin-bottom: 25px;    /* 입력창들끼리 서로 다닥다닥 붙지 않게 아래 여백 부여 */
+}
+
+/* 4. 항목 이름(라벨) 스타일 */
+.form-group label {
+    display: block;         /* 라벨을 한 줄 통째로 차지하게 해서 글자 입력창이 아래로 내려가도록 함 */
+    font-size: 15px;
+    font-weight: 600;       /* 글자를 약간 두껍게 */
+    color: var(--text);      /* 진한 텍스트 색상 */
+    margin-bottom: 8px;     /* 글자와 아래 입력창 사이의 간격 */
+}
+
+/* 5. 글자 입력창 공통 스타일 (제목창, 내용창 등) */
+.form-control {
+    width: 100%;            /* 가로 길이를 부모 상자에 꽉 차게 100%로 설정 */
+    padding: 14px 16px;     /* 안쪽 여백을 주어 글자가 갇혀 보이지 않게 함 */
+    font-size: 15px;
+    background-color: var(--bg); /* 연하고 부드러운 핑크빛 배경 */
+    border: 1px solid var(--line); /* 연한 테두리 */
+    border-radius: 8px;     /* 입력창 모서리 라운딩 */
+    outline: none;          /* 입력창 클릭 시 생기는 기본 파란 테두리 제거 */
+    color: var(--text);
+    transition: all 0.2s ease; /* 부드러운 전환 효과 */
+}
+
+/* 입력창을 마우스로 클릭해서 글을 쓰려고 할 때(포커스 상태) 바뀔 스타일 */
+.form-control:focus {
+    background-color: var(--bg); /* 배경을 다시 새하얗게 변경 */
+    border-color: var(--pink-deep); /* 테두리 선을 찐한 핑크색으로 변경해서 집중 효과 */
+}
+
+/* 내용(Textarea) 입력창 특별 높이 지정 */
+textarea.form-control {
+    height: 250px;          /* 본문은 글을 길게 써야 하므로 높이를 크게 지정 */
+    resize: none;           /* 마우스로 창 크기를 임의로 늘리거나 줄이지 못하게 고정 */
+}
+
+/* 6. 상품 검색 전용 (인풋창과 버튼이 가로로 나란히 오는 구조) */
+.search-input-group {
+    display: flex;          /* 인풋창과 검색 버튼을 가로로 나란히 배치하기 위해 Flex 사용 */
+    flex: 1;
+    gap: 10px;              /* 인풋창과 버튼 사이의 좁은 간격 */
+}
+
+/* 검색 버튼 스타일 */
+.btn-search {
+    padding: 10px 10px;        /* 버튼 좌우 여백 */
+    background-color: var(--pink); /* 메인 브랜드 컬러인 핑크색 배경 */
+    color: var(--bg);       /* 글자는 흰색 */
+    border: none;           /* 기본 테두리 없애기 */
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;        /* 마우스를 올렸을 때 손가락 모양으로 변경 */
+    transition: background-color 0.2s ease;
+    margin-left: 10px;
+    width: 5rem;
+}
+
+.btn-search:hover {
+    background-color: var(--pink-deep); /* 마우스를 올리면 조금 더 진한 핑크색으로 변경 */
+}
+
+/*============================================== 
+7. 이미지 첨부 드롭박스 영역 (점선 모양의 세련된 상자) 
+================================================*/
+.file-upload-wrapper {
+    width: 100%;
+    padding: 40px 20px;     /* 드롭존 영역 내부 상하좌우 여백 */
+    background-color: var(--pink-soft); /* 연한 핑크빛 배경 */
+    border: 2px dashed var(--pink); /* 실선이 아닌 점선(dashed) 테두리로 파일 공간 느낌 내기 */
+    border-radius: 12px;
+    text-align: center;     /* 정중앙에 아이콘과 글자들이 오도록 정렬 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-upload-wrapper:hover {
+    background-color: var(--sky);  /* 마우스 올리면 산뜻한 스카이블루 배경으로 피드백 */
+    border-color: var(--pink-deep); /* 점선은 짙은 핑크로 변경 */
+}
+
+/* 파일 업로드 내부 텍스트들 세로 배치 */
+.file-upload-wrapper span {
+    display: block;         /* 각각의 글자 스팬 태그들을 한 줄씩 차지하게 해서 세로로 정렬시킴 */
+}
+
+.upload-icon {
+    font-size: 32px;        /* 폴더 아이콘 크기 키우기 */
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 5px;
+}
+
+.upload-hint {
+    font-size: 13px;
+    color: var(--sub);       /* 힌트 텍스트는 서브 글자색(#666)으로 처리 */
+}
+
+/* 진짜 오리지널 파일 태그는 화면에서 숨기기 */
+#fileInput {
+    display: none;
+}
+
+/* 8. 맨 하단 등록/취소 버튼 영역 */
+.form-actions {
+    text-align: right;      /* 버튼들을 오른쪽 끝으로 밀어 붙임 */
+    padding-top: 20px;
+    border-top: 1px solid var(--line); /* 버튼 구역 위쪽에 얇은 구분선 생성 */
+}
+
+/* 버튼 기본 공통 모양 */
+.btn {
+    padding: 12px 30px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+/* 취소 버튼 */
+.btn-cancel {
+    background-color: var(--line); /* 기본 라인 회색 배경 */
+    color: var(--sub);             /* 서브 글자색 */
+    margin-right: 10px;            /* 등록 버튼과의 간격 */
+}
+
+.btn-cancel:hover {
+    background-color: #cbd5e1;     /* 호버 시 살짝 어둡게 */
+}
+
+/* 등록 완료 버튼 (가장 강조되어야 하는 메인 버튼) */
+.btn-submit {
+    background-color: var(--pink); /* 메인 핑크 버튼 */
+    color: var(--bg);              /* 흰색 글자 */
+}
+
+.btn-submit:hover {
+    background-color: var(--pink-deep); /* 호버 시 진한 핑크 */
+}
+
+/*==========================================
+ 미리보기 컨테이너 전체 레이아웃 (Grid 또는 Flex)
+ ===========================================*/
+
+.preview-container {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* 개별 이미지 래퍼 박스 (X 버튼 정렬을 위해 relative 필수) */
+.preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+/* 미리보기 이미지 스타일 */
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 구겨지지 않고 꽉 차게 */
+    border-radius: 12px; /* 둥근 모서리 처리 */
+    border: 1px solid #ddd;
+}
+
+/* 우상단 삭제(X) 버튼 스타일 */
+.preview-item .delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.preview-item .delete-btn:hover {
+    background-color: rgba(255, 0, 0, 0.8); /* 마우스 올리면 빨갛게 */
+}
+
+
+/* ==========================================================================
+   9. 검색 모달창 (창 띄웠을 때 뒤에 깔리는 반투명 검은 배경)
+   ========================================================================== */
+.modal-overlay {
+    display: none;          /* 평소에는 기본적으로 화면에서 아예 안 보이게 숨김 */
+    position: fixed;        /* 스크롤을 내려도 화면 정중앙에 고정되도록 고정 위치 설정 */
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* 뒤 배경을 흐리게 만드는 반투명 검은색 */
+    z-index: 1000;          /* 최상단 레이어로 무조건 맨 위에 오도록 함 */
+
+    /* ★ 완벽한 중앙 정렬을 위한 3줄 추가 */
+    justify-content: center;/* 자식(하얀 상자)을 가로 기준으로 정중앙 배치 */
+    align-items: center;    /* 자식(하얀 상자)을 세로 기준으로 정중앙 배치 */
+}
+
+/* 실제 모달 팝업 하얀 상자 */
+.modal-content {
+    background-color: var(--bg);
+    width: 600px;           /* 팝업창 가로 크기 */
+    height: 500px;
+    max-width: 90%;
+    padding: 25px;
+}
+
+.search-item {
+    display: flex;          /* ★ 핵심: 이미지와 텍스트 구역을 가로로 나란히 배치 */
+    align-items: center;    /* 이미지와 글자들의 위아래 수평 정중앙 맞춤 */
+    padding: 15px;          /* 각 상자 내부 여백 */
+    margin-bottom: 12px;    /* 결과 항목들끼리 서로 다닥다닥 붙지 않게 아래 간격 */
+    border: 1px solid var(--line); /* 은은한 회색 테두리 선 */
+    border-radius: 8px;     /* 모서리 부드럽게 라운딩 */
+    background-color: var(--bg);
+    transition: all 0.2s ease; /* 마우스 올릴 때 부드러운 전환 효과 */
+    cursor: pointer;        /* 클릭 가능한 손가락 모양 피드백 */
+
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 검색 결과 아이템에 마우스 올렸을 때(Hover) 화사한 핑크빛 피드백 */
+.search-item:hover {
+    background-color: var(--pink-soft); /* 부드러운 연핑크 배경색 */
+    border-color: var(--pink);          /* 테두리도 핑크색으로 강조 */
+}
+/* 마지막 검색 결과 아이템은 아래 여백을 없애서 깔끔하게 마감 */
+.search-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 3. 상품 이미지 스타일 */
+.search-item img {
+    width: 65px;            /* 이미지 가로 크기 딱 고정 */
+    height: 65px;           /* 이미지 세로 크기 딱 고정 */
+    object-fit: cover;      /* 크기가 달라도 정비율로 예쁘게 채우기 */
+    border-radius: 6px;     /* 이미지 모서리 라운딩 */
+    margin-right: 18px;     /* 이미지 오른쪽에 글자들과 벌어질 여백 확보 */
+    border: 1px solid var(--line); /* 이미지 외곽선 구분 */
+}
+
+/* 4. 상품 정보 텍스트 전체 구역 (제목과 카테고리를 세로로 정렬) */
+.item-info {
+    flex: 1;                /* 가로 공간에서 이미지를 제외한 남은 영역을 전부 다 차지 */
+    display: flex;
+    flex-direction: column; /* 제목과 카테고리가 위아래 세로로 오도록 설정 */
+    gap: 6px;               /* 제목과 카테고리 사이의 미세한 상하 간격 */
+    text-align: left;       /* 글자 왼쪽 정렬 강제 보장 */
+}
+
+/* 상품 제목(이름) 스타일 */
+.item-title {
+    font-size: 15px;
+    font-weight: 600;       /* 글자를 굵게 해서 눈에 띄게 처리 */
+    color: var(--text);      /* 진한 메인 글자색 (#333) */
+    line-height: 1.4;
+    margin: 0;              /* p 태그 자체의 기본 브라우저 여백 제거 */
+}
+
+/* 상품 카테고리 경로 스타일 */
+.item-cate {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sub);       /* 서브 글자색 (#666) */
+    margin: 0;              /* p 태그 자체의 기본 브라우저 여백 제거 */
+}
+
+/* 모달 머리글 (타이틀과 닫기 X 버튼 나란히 배치) */
+.modal-header {
+    display: flex;
+    justify-content: space-between; /* 타이틀은 왼쪽, X 버튼은 오른쪽 끝으로 찢음 */
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--text);
+}
+
+/* 모달 우측 상단 닫기(X) 버튼 */
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--sub);
+}
+
+.modal-close-btn:hover {
+    color: var(--text);
+}
+
+/* 검색 결과 아이템들이 담길 몸통 구역 */
+.modal-body {
+    max-height: 400px;      /* 결과가 너무 많으면 상자가 한없이 늘어나므로 최대 높이 제한 */
+    overflow-y: auto;       /* 넘치는 결과는 스크롤바가 생기도록 처리 */
+    padding: 10px 5px;
+}
+
+
+</style>
+
+<body>
+
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <main>
+        <div class="write-container">
+            <div class="write-header">
+                <h2>리뷰 등록하기</h2>
+            </div>
+
+            <form id="reviewForm" th:action="@{/review/write}" method="post" enctype="multipart/form-data">
+                
+                <input type="hidden" id="mainCategory" name="category1">
+                <input type="hidden" id="subCategory" name="category2">
+                <input type="hidden" id="productImage" name="productImage">
+                <input type="hidden" id="purchaseLink" name="productLink">
+
+                <section class="form-row">
+                    <div class="form-group">
+                        <label for="apiSearch">리뷰상품 검색</label>
+                        <div class="search-input-group">
+                            <input type="text" id="apiSearch" class="form-control" placeholder="검색어를 입력하세요.">
+                            <button type="button" class="btn-search" onclick="openSearchModal()">검색</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="form-row">
+                    <div class="form-group">
+                        <label for="targetTitle">선택된 리뷰 대상</label>
+                        <input type="text" id="targetTitle" name="productName" class="form-control" placeholder="검색 창에서 제품을 선택해 주세요." readonly required>
+                    </div>
+                </section>
+
+                <section class="form-row">
+                    <div class="form-group">
+                        <label for="title">리뷰 제목</label>
+                        <input type="text" id="title" name="title" class="form-control" placeholder="리뷰 제목을 입력해주세요." required>
+                    </div>
+                </section>
+
+                <section class="form-row">
+                    <div class="form-group">
+                        <label for="content">리뷰 내용</label>
+                        <textarea id="content" name="content" class="form-control" placeholder="내용을 정성껏 작성해주세요." required></textarea>
+                    </div>
+                </section>
+                
+                <section class="form-row">
+                    <label>이미지 첨부</label>
+                    <div class="file-upload-wrapper" id="dropZone" >
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text" id="uploadText">파일을 선택하거나 여기로 드래그하세요.</span>
+                        <span class="upload-hint">JPG, PNG, GIF 파일만 업로드 가능합니다.</span>
+                        <input type="file" id="fileInput" name="reviewFiles" multiple accept="image/*">
+                    </div>
+
+                    <div id="previewContainer" class="preview-container">
+                    </div>
+
+                </section>
+
+                <section class="form-row">
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-cancel" th:onclick="|location.href='@{/review}'|">취소</button>
+                        <button type="button" class="btn btn-submit" onclick="submitReviewForm()">등록 완료</button>
+                    </div>
+                </section>
+            
+            </form>
+        </div>
+    </main>
+
+    <div id="searchModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>검색 결과</h3>
+                <button type="button" class="modal-close-btn" onclick="closeSearchModal()">&times;</button>
+            </div>
+            <div id="modalResultList" class="modal-body">
+                </div>
+        </div>
+    </div>
+
+    <div th:replace="~{layout/footer :: footer}"></div>
+
+    <script>
+        // 전역 파일 배열 객체 선언 (드롭과 클릭 추가 파일들을 누적해서 관리하기 위함)
+        let globalFiles = [];  
+
+        // 용량 제한 기준 정의 (바이트 단위)
+        const MAX_SINGLE_SIZE = 10 * 1024 * 1024; // 10MB
+        const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+
+        // 등록 버튼 클릭 시 리뷰 대상 및 필수 데이터 검증 함수
+        function submitReviewForm() {
+            const targetTitle = document.getElementById("targetTitle");
+            const title = document.getElementById("title");
+            const content = document.getElementById("content");
+            const form = document.getElementById("reviewForm");
+
+
+
+            
+            // 1. 리뷰 대상(제품) 선택 여부 검증
+            if (!targetTitle.value || targetTitle.value.trim() === "") {
+                alert("리뷰 대상을 선택해주세요.");
+                document.getElementById("apiSearch").focus();
+                return false;
+            }
+
+            // 2. 제목 입력 여부 검증
+            if (!title.value || title.value.trim() === "") {
+                alert("리뷰 제목을 입력해주세요.");
+                title.focus();
+                return false;
+            }
+
+            // 3. 내용 입력 여부 검증
+            if (!content.value || content.value.trim() === "") {
+                alert("리뷰 내용을 입력해주세요.");
+                content.focus();
+                return false;
+            }
+
+            // 모든 검증 통과 시 서버로 제출
+            form.submit();
+
+        }
+
+
+        // 검색 버튼 클릭 시 작동하는   함수 (모달 열기 및 가상 검색 결과 출력)
+        function openSearchModal() {
+            const keyword = document.getElementById('apiSearch').value.trim();
+            if (!keyword) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+            
+            // 1. 백엔드 컨트롤러로 검색어 데이터 전송
+            fetch(`/api/search?keyword=${encodeURIComponent(keyword)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("네트워크 응답에 문제가 있습니다.");
+                    }
+                    return response.json(); // 서버가 준 데이터를 JSON 객체로 파싱
+                })
+                .then(data => {
+                    const modalBody = document.getElementById('modalResultList');
+                    modalBody.innerHTML = ''; // 기존 검색 초기화
+
+                    // 네이버 쇼핑 API 결과 데이터 구조는 'items'라는 배열 안에 담겨서 옵니다.
+                    const allItems = data.items;
+
+                    // category1 필드가 '화장품/미용'인 데이터만 필터링하여 상속 유도
+                    const items = allItems ? allItems.filter(item => item.category1 === '화장품/미용') : [];
+
+                    if (!items || items.length === 0){
+                        alert("화장품/미용 관련 키워드를 검색하셔야 합니다.");
+                        return;
+                    }
+                    
+                    // 2. 반복문을 돌며 JSON 데이터를 화면 HTML 구조로 동적 변환
+                    items.forEach(item => {
+                        // 네이버 제목에 포함된 <b> 태그 제거 처리
+                        const cleanTitle = item.title.replace(/<[^>]*>/g, '');
+
+                        // 검색 결과 목록 생성 및 클릭 이벤트(selectProduct) 연결
+                        modalBody.innerHTML += `
+                            <div class="search-item" onclick="selectProduct('${cleanTitle}', '${item.link}', '${item.image}', '${item.category2}', '${item.category3}')">
+                                <img src="${item.image}" alt="상품이미지" onerror="this.src='/images/common/no-image.png'">
+                                <div class="item-info">
+                                    <p class="item-title">${cleanTitle}</p>
+                                    <p class="item-cate">${item.category2} &gt; ${item.category3}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    // 3. 데이터 구성이 완료되면 모달창 표시
+                    document.getElementById('searchModal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("API 연동 중 오류가 발생했습니다.")
+                });
+        }
+
+        // 모달 닫기
+        function closeSearchModal() {
+            document.getElementById('searchModal').style.display = 'none';
+        }
+
+        // 상품 선택 시 폼에 데이터 바인딩
+        function selectProduct(title, link, image, mainCate, subCate) {
+            // 1. [화면 표시용] 사용자가 건드릴 수 없는 disabled 필드 및 읽기전용 필드에 세팅
+            document.getElementById('targetTitle').value = title;
+
+            // 2. [서버 전송용] 숨김(hidden) 필드에 세팅 (이미지, 링크 등은 화면엔 안 보이지만 전송됨)
+            document.getElementById('mainCategory').value = mainCate;
+            document.getElementById('subCategory').value = subCate;
+            document.getElementById('productImage').value = image;
+            document.getElementById('purchaseLink').value = link;
+
+            // 3. 모달창 닫기
+            closeSearchModal();
+        }
+
+        // [테마 확장 인터페이스] 페이지 로드 시 기존 로컬 스토리지 설정을 읽어 테마 상태를 동기화
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-mode");
+            }
+        });
+
+        //==================
+        // 파일 드래그 앤 드롭 기능 제어
+        //==================
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropZone = document.getElementById("dropZone");
+            const fileInput = document.getElementById("fileInput");
+            const uploadText = document.getElementById("uploadText");
+            
+            // 안전 장치: DOM 요소가 화면에 로드외지 않았다면 스크립트 예외 발생 처리 방지
+            if (!dropZone || !fileInput) {
+                console.error("드롭존 또는 파일 인풋 태그를 찾을 수 없습니다.");
+                return;
+            }
+
+            // 1. 모든 드래그 관련 이벤트에서 브라우저 기본 행위 전면 차단
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // 2. 모든 드래그 이벤트 가로채기 차단
+            const dragEvents = ['dragenter','dragover','dragleave','drop'];
+            dragEvents.forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // 3. 마우스가 파일 들고 박스 위로 진입했을 대 스타일(노란 대시선) 추가
+            
+            const enterEvents = ['dragenter', 'dragover'];
+            enterEvents.forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('drag-over');
+                }, false);
+            })
+
+            // 4. 마우스가 박스 밖으로 나갔을 때 스타일 제거
+            const leaveEvents = ['dragleave', 'drop'];
+            leaveEvents.forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+
+            // 화면에 선택된 멀티 파일들의 텍스트를 갱신해주는 공통 로직 함수
+            function updateUploadText(files){
+                if (files.length === 0) {
+                    uploadText.textContent = "파일을 선택하거나 여기로 드래그하세요.";
+                } else if (files.length ===1) {
+                    uploadText.textContent = `선택된 파일: ${files[0].name}`;
+                } else {
+                    uploadText.textContent = `선택된 파일: ${files[0].name} 외 ${files.length - 1}개`;
+                }
+            }
+
+            // 파일 리스트 배열을 input[type=file]태그의 실제 내부 데이터 객체(FileList)에 동기화 해주는 함수
+            function syncFilesToInput() {
+                const dataTransfer = new DataTransfer();
+                globalFiles.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                fileInput.files = dataTransfer.files; // 가상 객체의 파일 목록 데이터를 실제 input 태그에 주입
+            }
+
+            // [추가] 전역 배열(globalFiles)을 돌며 화면에 미리보기 썸네일을 렌더링하는 함수
+            function renderPreviews() {
+                const container = document.getElementById("previewContainer");
+                if (!container) return; // 안전장치
+
+                container.innerHTML = ""; // 기존에 그려진 썸네일들 싹 청소
+
+                globalFiles.forEach((file, index) => {
+                    const objectUrl = URL.createObjectURL(file);
+
+                    // 개별 이미지 카드 HTML 동적 생성
+                    const previewItem = document.createElement("div");
+                    previewItem.className = "preview-item";
+                    previewItem.innerHTML = `
+                        <img src="${objectUrl}" alt="미리보기" onload="URL.revokeObjectURL('${objectUrl}')">
+                        <button type="button" class="delete-btn" onclick="removeFile(${index})">X</button>
+                    `;
+                    container.appendChild(previewItem);
+                    
+                });
+            }
+
+            // [추가] X 버튼 클릭 시 특정 인덱스의 파일을 배열과 input에서 도려내는 함수
+            window.removeFile = function(index) {
+                globalFiles.splice(index, 1); // 전역 파일 배열에서 해당 데이터 삭제
+                
+                syncFilesToInput();  // input[type=file] 데이터 재동기화
+                updateUploadText(globalFiles); // 안내 글자 갱신
+                renderPreviews();    // 미리보기 화면 재출력 (인덱스가 재배정됨)
+            };
+
+
+   
+
+            // 현재 전역 배열(globalFiles)에 담긴 파일들의 총 용량을 계산하는 함수
+            function getGlobalTotalSize() {
+                return globalFiles.reduce((sum, file) => sum + file.size, 0);
+            }
+
+           // 5. 가장 중요: 파일을 드롭했을 때 처리하는 로직(데이터 주입 및 UI 변경 로직)
+            dropZone.addEventListener('drop', function (e) {
+                preventDefaults(e); // 브라우저 가로채기 및 클릭 이벤트 간섭 완전 차단
+                dropZone.classList.remove('drag-over'); // 드롭 완료 시 스타일 제거
+
+                const dt = e.dataTransfer;
+                const newFiles = dt.files; // 드롭된 파일 객체 목록
+
+                if (newFiles && newFiles.length > 0) {
+                  
+                    // ① 먼저 드롭된 모든 파일을 돌며 이미지 검증 및 데이터 주입 진행
+                    for (let i = 0; i < newFiles.length; i++) {
+                        const file = newFiles[i];
+
+                        // 이미지 파일 유형 체크 (image/ 로 시작하지 않으면 스킵)
+                        if (!file.type.startsWith('image/')) {
+                            alert(` 이미지가 아닌 파일은 제외됩니다: ${file.name}`);
+                            continue;
+                        }
+                        
+                        // ① 이미지 파일 유형 체크
+                        if (!file.type.startsWith('image/')) {
+                            alert(`이미지가 아닌 파일은 제외됩니다: ${file.name}`);
+                            continue;
+                        }
+
+                        // ② [추가] 낱개 파일 10MB 초과 검증
+                        if (file.size > MAX_SINGLE_SIZE) {
+                            alert("10MB 초과 입니다.");
+                            continue; // 이 파일은 건너뛰고 다음 파일 검사
+                        }
+
+                        // ③ [추가] 총 업로드 용량 50MB 초과 검증
+                        // (현재 누적된 용량 + 지금 추가하려는 파일 용량)
+                        if (getGlobalTotalSize() + file.size > MAX_TOTAL_SIZE) {
+                            alert("50MB 초과입니다.");
+                            break; // 총량이 넘어가면 이후 파일들은 더 이상 추가하지 않고 루프 종료
+                        }
+
+
+                        // 검증을 통과한 이미지만 기존 파일 배열에 추적용으로 주입
+                        
+                        globalFiles.push(file);
+
+                        // 💥 [Base64 인코딩 핵심 구역 - 내부 유지]
+                        // 자바스크립트 내장 객체 FileReader 생성
+                        // const reader = new FileReader();
+
+                        // 파일을 Base64 문자열(Data URL)로 읽어들이기 시작
+                        // reader.readAsDataURL(file);
+
+                        // 인코딩이 완료되었을 때 실행되는 이벤트
+                        // reader.onload = function (event) {
+                            // event.target.result 안에 Base64 코드가 담깁니다.
+                           // const base64String = event.target.result;
+                            //console.log(`변환된 Base64 문자열 (${file.name}):`, base64String);
+                        //};
+
+
+
+                    } // 👈 💥 [중요] 꼬였던 for문 괄호를 여기서 닫아주어야 루프 내에서 file 변수가 안전하게 유지됩니다!
+                    
+                    // ② 모든 파일의 수집 및 FileReader 예약이 끝난 후 딱 한 번만 일괄 처리!
+                    syncFilesToInput();            // input 태그 데이터 갱신
+                    updateUploadText(globalFiles); // 화면 글자 갱신
+                    renderPreviews();              // 📸 하단 바둑판 미리보기 컨테이너 출력!
+                }
+            }, false);
+
+            // 6. 드롭 박스 영역 클릭시 안전하게 스크립트 내부에서 클릭 이벤트 연결
+            dropZone.addEventListener('click', function (e) {
+    
+                if (e.target === fileInput) {
+                   return;
+                }
+
+                 fileInput.click();
+            })
+
+            // 7. 드롭 대신 클릭해서 일반적인 방법(파일 탐색기)으로 파일을 선택했을 때도 텍스트 변경 처리
+            fileInput.addEventListener('change', function () {
+                const selectedFiles = fileInput.files;
+
+                if (selectedFiles && selectedFiles.length > 0) {
+                    // 파일 개수에 따른 화면 텍스트 분기 처리
+                    for (let i = 0; i < selectedFiles.length; i++) {
+                        
+                        const file = selectedFiles[i];
+
+                        // ① 이미지 파일 유형 체크
+                        if (!file.type.startsWith('image/')) {
+                            alert(`❌ 이미지가 아닌 파일은 제외됩니다`);
+                            continue; // 이미지가 아니면 패스!
+                        }
+
+                        // ① 이미지 파일 유형 체크
+                        if (!file.type.startsWith('image/')) {
+                            alert(`❌ 이미지가 아닌 파일은 제외됩니다`);
+                            continue; 
+                        }
+
+                        // ② [보완] 낱개 파일 10MB 초과 검증
+                        if (file.size > MAX_SINGLE_SIZE) {
+                            alert("10MB 초과 입니다.");
+                            continue;
+                        }
+
+                        // ③ [보완] 총 업로드 용량 50MB 초과 검증
+                        if (getGlobalTotalSize() + file.size > MAX_TOTAL_SIZE) {
+                            alert("50MB 초과입니다.");
+                            break; 
+                        }
+
+                        // ② 이미지인 경우에만 전역 배열과 임시 배열에 추가
+                        globalFiles.push(file);
+                        
+                    }
+                    syncFilesToInput();
+                    updateUploadText(globalFiles);
+                    renderPreviews();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

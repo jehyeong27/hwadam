@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.login.MemberProfileMapper">
+
+    <!-- 새로 가입한 회원의 프로필 사진 정보 최초 등록 -->
+    <insert id="insertMemberProfile"
+            parameterType="String">
+
+        INSERT INTO member_profile(username)
+        VALUES (#{username})
+
+    </insert>
+
+    <!-- 회원이 변경한 프로필 사진 이미지에 대한 정보 저장 -->
+    <update id="updateMemberProfile"
+            parameterType="com.miles.beauminity.vo.login.MyPageFileVO">
+
+        UPDATE member_profile
+        SET
+            original_name = #{originalName},
+            saved_name = #{savedName},
+            file_path = #{filePath},
+            file_type = #{fileType},
+            file_size = #{fileSize}
+        WHERE username = #{username}
+    
+    </update>
+
+    <!-- 회원이 기본 프로필 사진으로 변경에 기존 프로필 사진 이미지 정보 삭제 -->
+    <update id="resetMemberProfile"
+            parameterType="String">
+
+        UPDATE member_profile
+        SET
+            original_name = null,
+            saved_name = null,
+            file_path = null,
+            file_type = null,
+            file_size = null
+        WHERE username = #{username}
+
+    </update>
+
+    <!-- 프로필 사진 이미지 정보 검색-->
+    <select id="findMemberProfile"
+            parameterType="String"
+            resultType="com.miles.beauminity.vo.login.MyPageFileVO">
+
+        SELECT *
+        FROM member_profile
+        WHERE username = #{username}
+
+    </select>
+
+</mapper>

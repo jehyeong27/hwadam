@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.feed.FeedReplyMapper">
+
+
+    <!-- 댓글 DB에 저장 -->
+    <insert id="postReply"
+        parameterType="com.miles.beauminity.vo.feed.FeedReplyVO"
+        useGeneratedKeys="true"
+        keyProperty="replyId"> INSERT INTO feed_reply ( feed_id, username, reply_content, deleted,
+        parents_reply_id ) VALUES( #{feedId}, #{username}, #{replyContent}, 0,
+        #{parentsReplyId} ) </insert>
+    <update id="increaseReply"
+        parameterType="com.miles.beauminity.vo.feed.FeedReplyVO"> update feed set reply_cnt =
+        reply_cnt +1 where feed_id=#{feedId} </update>
+    <!--피드에
+    해당하는 댓글 가져오기-->
+    <select id="getReply"
+        parameterType="com.miles.beauminity.vo.feed.FeedReplyVO"
+        resultType="com.miles.beauminity.vo.feed.FeedReplyVO">
+
+    SELECT
+        r.reply_id AS replyId,
+        r.feed_id AS feedId,
+        r.username AS username,
+        m.nickname AS nickname,
+        r.reply_content AS replyContent,
+        r.parents_reply_id AS parentsReplyId,
+        r.deleted AS deleted,
+        parent_member.nickname AS parentNickname,
+        mp.saved_name AS profileImage
+    FROM feed_reply r
+    JOIN member m
+        ON r.username = m.username
+    LEFT JOIN member_profile mp
+        ON r.username = mp.username
+    LEFT JOIN feed_reply parent_reply
+        ON r.parents_reply_id = parent_reply.reply_id
+    LEFT JOIN member parent_member
+        ON parent_reply.username = parent_member.username
+    WHERE r.feed_id = #{feedId}
+    ORDER BY r.reply_id ASC
+
+</select>
+
+    <!-- 댓글 리스트 가져오기 -->
+<select id="getFeedReplyList"
+        parameterType="long"
+        resultType="com.miles.beauminity.vo.feed.FeedReplyVO">
+
+    SELECT
+        r.reply_id AS replyId,
+        r.feed_id AS feedId,
+        r.username AS username,
+        m.nickname AS nickname,
+        r.reply_content AS replyContent,
+        r.parents_reply_id AS parentsReplyId,
+        r.deleted AS deleted,
+        parent_member.nickname AS parentNickname,
+        mp.saved_name AS profileImage
+    FROM feed_reply r
+    JOIN member m
+        ON r.username = m.username
+    LEFT JOIN member_profile mp
+        ON r.username = mp.username
+    LEFT JOIN feed_reply parent_reply
+        ON r.parents_reply_id = parent_reply.reply_id
+    LEFT JOIN member parent_member
+        ON parent_reply.username = parent_member.username
+    WHERE r.feed_id = #{feedId}
+    ORDER BY r.reply_id ASC
+
+</select>
+    <update id="updateReply"
+        parameterType="com.miles.beauminity.vo.feed.FeedReplyVO"> update feed_reply set
+        reply_content=#{replyContent} where reply_id=#{replyId} </update>
+<!-- 자식 댓글이 존재할 경우 -->
+    <update id="updateDeleteReply"
+        parameterType="long"> update feed_reply fr join feed f on fr.feed_id=f.feed_id set fr.deleted=1,f.reply_cnt = f.reply_cnt -1  where reply_id=#{replyId} </update>
+<!-- 자식 댓글 존재 여부 확인-->
+    <select id="hasChildren"
+        parameterType="long"
+        resultType="long">
+        select parents_reply_id 
+            from feed_reply
+            where parents_reply_id = #{replyId}
+    </select>
+    <delete id="deleteReply"
+        parameterType="long">
+        delete from feed_reply
+        where reply_id=#{replyId}
+    </delete>
+    <select id="parentsReplyCnt"
+        parameterType="long"
+        resultType="int">
+    SELECT COUNT(*)
+    FROM feed_reply
+    WHERE parents_reply_id = (SELECT parents_reply_id FROM feed_reply where reply_id=#{replyId})
+   
+    </select>
+    <select id="parentsReplyFindId"
+        parameterType = "long"
+        resultType = "long">
+        select parents_reply_id
+        from feed_reply
+        WHERE reply_id = #{replyId}
+    </select>
+    <delete id="parentsDelete"
+        parameterType="long">
+        delete from feed_reply
+        where reply_id = #{value}
+    </delete>
+
+<!-- 부모 댓글로 사용자의 아이디 가져오기-->
+    <select id = "getParentReplyWriter"
+            parameterType = "long"
+            resultType = "string">
+        SELECT username
+        FROM feed_reply
+        WHERE reply_id = #{parentsReplyId}
+    </select>
+
+</mapper>

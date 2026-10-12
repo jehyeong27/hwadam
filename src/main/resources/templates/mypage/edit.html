@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>화담 : 내정보 수정</title>
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/mypage/edit.css}">
+</head>
+<body>
+
+    <div th:replace="~{layout/header :: headerFragment}"></div>
+
+    <main class="edit-main">
+        <div class="edit-container">
+            <h2 class="edit-page-title">내정보 수정</h2>
+            
+            <form th:action="@{/mypage/edit/info}" method="post">
+                <div class="edit-group-title">기본 정보</div>
+                <div class="edit-grid">
+                    <div class="edit-item">
+                        <span class="edit-label">아이디</span>
+                        <input type="text" name="username" th:value="${memberInfo.member.username}" class="edit-input input-readonly" readonly>
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">닉네임</span>
+                        <input type="text" name="nickname" th:value="${memberInfo.member.nickname}" class="edit-input"
+                               maxlength="12" placeholder="닉네임 (12자 이하)" required>
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">이름</span>
+                        <input type="text" name="name" th:value="${memberInfo.member.name}" class="edit-input"
+                                maxlength="10" placeholder="이름 (10자 이하)" required>
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">성별</span>
+                        <div class="gender-group">
+                            <label><input type="radio" name="gender" value="남" th:checked="${memberInfo.member.gender == '남'}"> 남</label>
+                            <label><input type="radio" name="gender" value="여" th:checked="${memberInfo.member.gender == '여'}"> 여</label>
+                        </div>
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">이메일</span>
+                        <input type="email" name="email" th:value="${memberInfo.member.email}" 
+                            class="edit-input" required 
+                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                            placeholder="example@naver.com">
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">전화번호</span>
+                        <input type="tel" name="phone" th:value="${memberInfo.member.phone}" 
+                            class="edit-input" required
+                            pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}"
+                            placeholder="010-1234-5678">
+                    </div>
+                    <div class="edit-item full-width">
+                        <span class="edit-label">생년월일</span>
+                        <input type="date" name="birthday" th:value="${memberInfo.member.birthday}" class="edit-input" required>
+                    </div>
+                </div>
+
+                <div class="edit-group-title">뷰티 정보</div>
+                <div class="edit-grid">
+                    <div class="edit-item">
+                        <span class="edit-label">피부타입</span>
+                        <select name="skinType" class="edit-input" required>
+                            <option value="중성" th:selected="${memberInfo.member.skinType == '중성'}">중성</option>
+                            <option value="건성" th:selected="${memberInfo.member.skinType == '건성'}">건성</option>
+                            <option value="지성" th:selected="${memberInfo.member.skinType == '지성'}">지성</option>
+                            <option value="민감성" th:selected="${memberInfo.member.skinType == '민감성'}">민감성</option>
+                            <option value="복합성" th:selected="${memberInfo.member.skinType == '복합성'}">복합성</option>
+                            <option value="수부지" th:selected="${memberInfo.member.skinType == '수부지'}">수부지</option>
+                        </select>
+                    </div>
+                    <div class="edit-item">
+                        <span class="edit-label">퍼스널 컬러</span>
+                        <div class="edit-item">
+
+    <select name="personalColor"
+            class="edit-input"
+            required>
+
+        <option value="봄웜"
+                th:selected="${memberInfo.member.personalColor == '봄웜'}">
+            봄웜
+        </option>
+
+        <option value="가을웜"
+                th:selected="${memberInfo.member.personalColor == '가을웜'}">
+            가을웜
+        </option>
+
+        <option value="여름쿨"
+                th:selected="${memberInfo.member.personalColor == '여름쿨'}">
+            여름쿨
+        </option>
+
+        <option value="겨울쿨"
+                th:selected="${memberInfo.member.personalColor == '겨울쿨'}">
+            겨울쿨
+        </option>
+
+    </select>
+</div>
+                    </div>
+                </div>
+
+                <div class="action-btns">
+                    <button type="submit" class="btn-submit">저장하기</button>
+                    <button type="button" class="btn-cancel" th:onclick="|location.href='@{/mypage}'|">취소</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <div th:replace="~{layout/footer :: footerFragment}"></div>
+</body>
+</html>

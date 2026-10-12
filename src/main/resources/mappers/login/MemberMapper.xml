@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.login.MemberMapper">
+
+    <!-- 입력된 아이디로 가입된 계정이 있는지 확인 -->
+    <select id="findMemberById"
+            parameterType="String"
+            resultType="long">
+
+        SELECT count(*)
+        FROM member
+        WHERE username = #{username}
+    
+    </select>
+
+    <!-- 입력된 이메일로 가입된 계정이 있는지 확인 -->
+    <select id="findMemberByEmail"
+            parameterType="String"
+            resultType="long">
+
+        SELECT count(*)
+        FROM member
+        WHERE email = #{email}
+
+    </select>
+
+    <!-- 입력된 아이디와 이메일로 가입된 계정이 있는지 확인 -->
+    <select id="findMemberByEmailUsername"
+            parameterType="com.miles.beauminity.vo.login.MemberVO"
+            resultType="long">
+
+        SELECT count(*)
+        FROM member
+        WHERE email = #{email} AND username = #{username}
+
+    </select>
+
+    <!-- 로그인된 회원의 정보 검색 -->
+    <select id="findLoginId"
+            parameterType="String"
+            resultType="com.miles.beauminity.vo.login.MemberVO">
+
+        SELECT *
+        FROM member
+        WHERE username = #{username}
+    
+    </select>
+
+    <!-- 회원의 비밀번호 검색 -->
+    <select id="findPasswordById"
+            parameterType="String"
+            resultType="String">
+
+        SELECT password
+        FROM member
+        WHERE username = #{username}
+
+    </select>
+    
+    <!-- 회원의 이메일로 가입된 아이디, 가입일 검색-->
+    <select id="findSignedIdsByEmail"
+            parameterType="String"
+            resultType="com.miles.beauminity.vo.login.MemberVO">
+
+        SELECT username, signed_at
+        FROM member
+        WHERE email = #{email}
+
+    </select>
+    
+    <!-- 회원의 등급 이름 검색 -->
+    <select id="findGradeName"
+            parameterType="String"
+            resultType="String">
+
+        SELECT grade_name
+        FROM grade
+        WHERE grade_id = #{gradeId}
+
+    </select>
+
+    <!-- 새로운 회원 정보 등록 (회원가입) -->
+    <insert id="insertMember"
+            parameterType="com.miles.beauminity.vo.login.MemberVO">
+    
+        INSERT INTO member(
+            username,
+            password,
+            nickname,
+            name,
+            birthday,
+            gender,
+            email,
+            phone,
+            skin_type,
+            personal_color
+        ) VALUES (
+            #{username},
+            #{password},
+            #{nickname},
+            #{name},
+            #{birthday},
+            #{gender},
+            #{email},
+            #{phone},
+            #{skinType},
+            #{personalColor}
+        )
+
+    </insert>
+    
+    <!-- 회원 정보를 수정 (비밀번호 미포함) -->
+    <update id="updateMember"
+            parameterType="com.miles.beauminity.vo.login.MemberVO">
+
+        UPDATE member
+        SET
+            nickname = #{nickname},
+            name = #{name},
+            birthday = #{birthday},
+            gender = #{gender},
+            email = #{email},
+            phone = #{phone},
+            skin_type = #{skinType},
+            personal_color = #{personalColor}
+        WHERE username = #{username}
+
+    </update>
+
+    <!-- 비밀번호 수정 -->
+    <update id="updatePassword"
+            parameterType="com.miles.beauminity.vo.login.MemberVO">
+
+        UPDATE member
+        SET
+            password = #{password}
+        WHERE username = #{username}
+
+    </update>
+
+    <!-- 탈퇴한 회원 아이디 변경 -->
+    <update id="withdrawMember"
+            parameterType="string">
+        UPDATE member
+        SET status = "deleted"
+        where username=#{username}
+    </update>
+
+    <!--회원 탈퇴 사유 저장-->
+    <insert id="feedback"
+            parameterType="com.miles.beauminity.vo.login.FeedbackVO"
+            keyProperty="feedbackId"
+            >
+        INSERT INTO feedback(
+            reason,
+            improvement
+        )
+        VALUES (
+            #{reason},
+            #{improvement}
+        )
+    </insert>
+
+    <!-- 회원등록 시 100point 지급하는 쿼리문 -->
+    <update id="updatePoint"
+            parameterType="com.miles.beauminity.vo.login.MemberVO">
+        UPDATE member 
+        SET point = point + #{point}
+        WHERE username = #{username}
+    </update>
+
+</mapper>

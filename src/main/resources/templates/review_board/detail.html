@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화담 : 리뷰</title>
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}">
+    <link rel="stylesheet" th:href="@{/css/review_board/review_common.css}">
+    <link rel="stylesheet" th:href="@{/css/review_board/review_detail.css}">
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+</head>
+<style>
+
+button, input, textarea, select {
+    font-family: inherit; /* body의 폰트를 그대로 물려받음 */
+    color: inherit;       /* body의 글자색(var(--text))을 그대로 물려받음 */
+    line-height: inherit; /* body의 줄간격(1.6)을 그대로 물려받음 */
+}
+
+/* 상세보기 메인 컨테이너 박스 */
+.detail-container {
+    max-width: 850px;
+    margin: 50px auto 0 auto;
+    padding: 40px;
+    background-color: var(--bg);   /* 하얀색 바탕 */
+    border: 1px solid var(--line); /* 은은한 회색 테두리 */
+    border-radius: 12px;
+}
+
+/* 상단 헤더 및 메타 정보 */
+.category-path {
+    font-size: 14px;
+    color: var(--sub);
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.category-path span {
+    color: var(--pink-deep);       /* 강조 카테고리는 진한 핑크 */
+    font-weight: 600;
+}
+
+.detail-header {
+    margin-bottom: 35px;
+    border-bottom: 2px solid var(--pink); /* 일관성 있는 시그니처 핑크 구분선 */
+    padding-bottom: 18px;
+}
+
+/* 제목 텍스트 */
+.detail-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 15px 0;
+    line-height: 1.4;
+}
+
+.detail-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* 작성 정보 정렬 (좌측: 작성일 / 우측: 조회수 구조) */
+.detail-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--sub);
+}
+
+/* 세로 구분선 (|) 은은하게 스타일링 */
+.detail-meta-row span:not([class]) {
+    margin: 0 0.5rem;
+    color: var(--sub);
+}
+
+.detail-meta-row strong {
+    color: var(--text);
+}
+
+.stats-group {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* 조회수, 댓글수 통계 그룹 */
+.stats-group span {
+    margin-left: 12px;
+}
+
+.stats-group strong {
+    color: var(--pink-deep); /* 숫자 강조 */
+}
+
+/* 리뷰 대상 제품 정보 구역 */
+.product-info-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg);   /* 산뜻한 파스텔 블루 배경 */
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 35px;
+    border: 1px solid var(--line);
+}
+/* '리뷰 대상' 소제목 텍스트 */
+.product-info-card span:first-child {
+    font-size: 13px;
+    color: var(--sub);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.product-info-card .product-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* 상품 썸네일 이미지 */
+.product-image-wrapper img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background-color: var(--bg);
+}
+
+.product-image-wrapper span {
+    font-size: 13px;
+    color: var(--sub);
+}
+
+.product-image-wrapper img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* 본문 내용 및 업로드 이미지 */
+.detail-content-body {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;         /* 작성할 때 넣은 엔터(줄바꿈)가 그대로 보이게 보존 */
+    padding: 10px 5px;
+    margin-bottom: 40px;
+    min-height: 150px;
+}
+
+.attached-images-grid {
+    display: flex;
+    flex-direction: column;         /* 리뷰 이미지는 가로 그리드보다 세로로 길게 보는게 편함 */
+    gap: 30px;
+    align-items: center;            /* 이미지 정중앙 배치 */
+    margin-bottom: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.image-item-box {
+    width: 100%;
+    max-width: 650px;               /* 이미지가 너무 거대해지는 것을 방지 */
+}
+/* 이미지 위에 작게 붙는 '업로드한 이미지1' 안내 텍스트 */
+.image-item-box span {
+    font-size: 12px;
+    color: var(--sub);
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.image-item-box img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* 하단 액션 및 좋아요/링크 영역 */
+.detail-actions-row {
+    display: flex;
+    justify-content: space-between; /* 목록으로는 왼쪽, 나머지 액션은 오른쪽 정렬 */
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 25px;
+    border-top: 1px solid var(--line);
+}
+/* 버튼 기본 공통 스타일 제거 및 재정의 */
+.detail-actions-row a,
+.detail-actions-row button {
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+/* [좌측] 목록으로 버튼 */
+.btn-list-go {
+    padding: 10px 20px;
+    background-color: var(--line);
+    color: var(--sub);
+    border: none;
+}
+
+.btn-list-go:hover {
+    background-color: #cbd5e1;
+    color: var(--text);
+}
+
+/* [우측] 쇼핑몰 이동 버튼 */
+.btn-link-out {
+    background-color: var(--pink-soft);
+    color: var(--pink-deep);
+    border: 1px solid var(--pink);
+    padding: 10px 20px;
+}
+
+.btn-link-out:hover {
+    background-color: var(--pink);
+    color: var(--bg);
+}
+
+/* [우측] 수정 버튼 (블랙 감성을 지우고 핑크 무드 조화) */
+.btn-edit-dark {
+    padding: 10px 20px;
+    background-color: var(--pink);
+    color: var(--bg);
+    border: 1px solid var(--pink);
+}
+
+.btn-edit-dark:hover {
+    background-color: var(--pink-deep);
+    border-color: var(--pink-deep);
+}
+
+/* [우측] 삭제 버튼 */
+.btn-delete-line {
+    padding: 10px 20px;
+    background-color: var(--bg);
+    color: var(--sub);
+    border: 1px solid var(--line);
+}
+
+.btn-delete-line:hover {
+    background-color: #fff0f1;
+    color: #9f1239;
+    border-color: #fecdd3;
+}
+
+/* [우측] 하트(좋아요) 아이콘 구역 */
+.detail-actions-row div:has(> .like-icon) {
+    font-size: 1.5rem;
+    transition: transform 0.2s ease;
+    user-select: none;
+}
+
+.detail-actions-row div:has(> .like-icon):hover {
+    transform: scale(1.2);          /* 하트에 마우스 올리면 통통 튀는 피드백 */
+    color: #ff4d4d !important;
+}
+/* ======================================================= */
+/* 🆕 [추가] 좋아요가 실제로 눌렸을 때(활성화) 고정될 빨간색 스타일 */
+/* ======================================================= */
+.detail-actions-row div:has(> .like-icon.active) .like-icon {
+    color: #ff4d4d !important;      /* 마우스를 떼어도 하트가 빨간색으로 고정됨 */
+}
+.like-count {
+    margin-left: 5px;
+    /* body에 설정한 폰트 우선순위를 그대로 가져옵니다 */
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-weight: 600; /* 숫자를 좀 더 또렷하게 보이게 합니다 */
+    font-size: 14px;  /* 필요에 따라 조절하세요 */
+    color: var(--text);
+}
+
+/* 댓글 영역 */
+/* 9. 댓글 섹션 디자인 (댓글 창 무드 세팅) */
+.comment-section {
+    max-width: 850px;
+    margin: 30px auto 80px auto;    /* 하단 여백 넉넉히 확보 */
+    padding: 30px;
+    background-color: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.comment-section h5 {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 20px 0;
+}
+
+/* 댓글 없을 때 나오는 빈 상자 */
+.comment-empty-box {
+    padding: 40px 0;
+    text-align: center;
+    color: var(--sub);
+    font-size: 14px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+/* 댓글 아이템 간격 */
+.comment-item {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+    position: relative; /* 👈 레이어 위치의 기준점이 됩니다 */
+}
+
+/* 2. 더보기 영역 랩퍼 (위치 정렬) */
+.comment-more-wrap {
+    position: absolute;
+    top: 18px;    /* 작성자 아이디(strong)와 수평을 맞추기 위한 높이 */
+    right: 0;
+}
+
+.comment-more-btn{
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: var(--sub);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.comment-more-btn:hover {
+    background-color: #f0f0f0;
+    color: var(--text);
+}
+
+/* 4. 드롭다운 메뉴 상자 (평소에는 display: none 처리) */
+.comment-more-menu {
+    display: none; /* 👈 기본 상태는 안 보이게 숨김 */
+    position: absolute;
+    top: 28px;
+    right: 0;
+    background-color: var(--bg); /* 기존 화이트/배경색 변수 */
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 부드러운 레이어 그림자 */
+    padding: 4px;
+    min-width: 95px;
+    z-index: 50;
+}
+
+/* 자바스크립트가 클릭 시 .active 클래스를 붙여주면 화면에 나타남 */
+.comment-more-menu.active {
+    display: block;
+}
+
+/* 5. 메뉴 안의 버튼들 공통 디자인 (수정하기 / 삭제하기) */
+.comment-more-menu button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);
+    transition: background-color 0.2s ease;
+}
+
+/* 개별 버튼 호버 효과 */
+.comment-edit-btn:hover {
+    background-color: #f5f5f5;
+}
+
+/* 삭제하기 버튼은 경고 의미로 붉은 톤 피드백 제공 */
+.comment-delete-btn {
+    color: #dc3545 !important; /* 붉은색 글씨 */
+}
+
+.comment-delete-btn:hover {
+    background-color: #fff5f5;
+}
+
+.comment-meta {
+    margin-bottom: 6px;
+}
+
+.comment-meta strong {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.comment-meta span {
+    font-size: 12px;
+    color: var(--sub);
+    margin-left: 10px;
+}
+
+.comment-body {
+    display: inline-block;
+    margin-top: 0px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+    white-space: pre-wrap; /* 댓글 내부 줄바꿈 유지 */
+}
+
+/* 댓글 입력 폼 디자인 */
+.comment-write-box {
+    margin-top: 35px;
+    padding-top: 25px;
+    border-top: 1px solid var(--line);
+}
+
+.comment-write-box textarea {
+    width: 100%;
+    height: 90px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    resize: none;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.comment-write-box textarea:focus {
+    outline: none;
+    border-color: var(--pink); /* 포커스 시 시그니처 핑크 테두리 */
+}
+
+/* 등록 버튼 우측 정렬 박스 */
+.comment-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+ /*=============================
+        대댓글 달기 구역
+    ===============================*/
+.comment-content-flex {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+}
+
+.comment-action-row {
+    
+    margin-top: 0px;
+}
+
+/* 대댓글(자식 댓글) 스타일 */
+.comment-item.child-reply {
+    margin-left: 30px; /* 오른쪽으로 30px 들여쓰기 */
+    background-color: #f9f9f9; /* 대댓글은 바탕색을 살짝 다르게 구별 */
+    border-left: 3px solid var(--pink); /* 왼쪽에 시그니처 핑크 선으로 포인트 */
+    padding-left: 15px;
+}
+
+/* 대댓글 닉네임 앞에 화살표 붙여주기 기믹 */
+.comment-item.child-reply .comment-meta strong::before {
+    content: "↳ ";
+    color: var(--pink);
+    margin-right: 4px;
+}
+
+.btn-reply-toggle {
+
+    background-color: var(--bg); !important;
+    border: 1px solid var(--pink);
+    border-radius: 10px;
+    color: var(--text); /* 살짝 흐린 서브 컬러 */
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px 5px;
+    
+}
+
+.btn-reply-toggle:hover {
+    color: var(--pink); /* 마우스 올리면 시그니처 핑크로 피드백 */
+    text-decoration: underline;
+}
+
+.btn-reply-submit {
+    padding: 10px 24px;
+    background-color: var(--pink);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-reply-submit:hover {
+    background-color: var(--pink-deep);
+}
+
+/* 기본적으로 숨겨두는 대댓글창 클래스 */
+.reply-form-box.hidden {
+    display: none;
+}
+
+/* 눈에 보일 때 스타일 (기존 디자인 톤에 맞춤) */
+.reply-form-box {
+    margin-top: 10px;
+    margin-left: 20px; /* 부모 댓글보다 살짝 안으로 들여쓰기 */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.reply-textarea {
+    width: 100%;
+    height: 60px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: none;
+}
+
+.btn-reply-submit {
+    align-self: flex-end; /* 등록 버튼만 우측 정렬 */
+    background-color: var(--pink);
+    color: var(--bg);
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-reply-cancel {
+    align-self: flex-end; /* 등록 버튼만 우측 정렬 */
+    background-color: var(--bg);
+    color: var(--text);
+    border: 2px soild var(--pink);
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.reply-target-info {
+    font-size: 0.85rem;
+    color: var(--text);
+    font-weight: bold;
+    margin-bottom: 0.6rem;
+    padding-left: 2px;
+
+}
+
+/* ==========================================================================
+   수정 모드(자바스크립트 동적 생성) 컴포넌트 디자인
+   ========================================================================== */
+
+/* 수정 버튼 클릭 시 .comment-body 안에 교체되어 들어갈 textarea */
+.edit-textarea {
+    width: 100%;
+    height: 75px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    resize: none;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: var(--text);
+    margin-top: 5px;
+}
+
+/* 수정창 포커스 시 작성창과 동일하게 핑크 테두리 적용 */
+.edit-textarea:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+/* 수정 모드 하단 버튼 배치용 랩퍼 */
+.edit-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+/* 수정 모드 - 취소 버튼 */
+.btn-cancel {
+    padding: 6px 14px;
+    background-color: #f0f0f0;
+    color: var(--sub);
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #e5e5e5;
+}
+
+/* 수정 모드 - 저장 버튼 */
+.btn-save {
+    padding: 6px 14px;
+    background-color: var(--text); /* 본문 메인 컬러로 무게감 부여 */
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-save:hover {
+    background-color: #333;
+}
+
+/* ==========================================================================
+   수정 모드(자바스크립트 동적 생성) 컴포넌트 디자인
+   ========================================================================== */
+
+/* 수정 버튼 클릭 시 .comment-body 안에 교체되어 들어갈 textarea */
+.edit-textarea {
+    width: 100%;
+    height: 75px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    resize: none;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: var(--text);
+    margin-top: 5px;
+}
+
+/* 수정창 포커스 시 작성창과 동일하게 핑크 테두리 적용 */
+.edit-textarea:focus {
+    outline: none;
+    border-color: var(--pink);
+}
+
+/* 수정 모드 하단 버튼 배치용 랩퍼 */
+.edit-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+/* 수정 모드 - 취소 버튼 */
+.btn-cancel {
+    padding: 6px 14px;
+    background-color: #f0f0f0;
+    color: var(--sub);
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #e5e5e5;
+}
+
+/* 수정 모드 - 저장 버튼 */
+.btn-save {
+    padding: 6px 14px;
+    background-color: var(--text); /* 본문 메인 컬러로 무게감 부여 */
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-save:hover {
+    background-color: #333;
+}
+
+
+
+/* ==========================================================================
+   [유지 및 보완] 모바일 및 태블릿 환경 대응 (반응형 미디어 쿼리)
+   ========================================================================== */
+@media (max-width: 768px) {
+/* 전체 컨테이너 여백 조정으로 모바일 화면 넓게 쓰기 */
+.detail-container, 
+.comment-section {
+    padding: 20px;
+    margin: 20px 10px;
+}
+
+/* 가로로 나열되던 요소들을 세로(column)로 안전하게 배치 변경 */
+.detail-meta-row, 
+.product-info-card, 
+.detail-actions-row { 
+    flex-direction: column; 
+    align-items: flex-start; /* 왼쪽 정렬로 통일 */
+    gap: 12px; 
+}
+
+/* 모바일에서는 조회수/댓글수 구역을 아래로 자연스럽게 내림 */
+.stats-group {
+    margin-top: 5px;
+}
+.stats-group span:first-child {
+    margin-left: 0; /* 모바일 첫 요소 간격 초기화 */
+}
+
+/* 하단 버튼 구역 모바일 최적화 */
+.detail-actions-row {
+    align-items: stretch; /* 버튼들이 가로로 꽉 차게 설정 */
+    width: 100%;
+}
+
+/* 버튼 옆에 붙은 마진이나 정렬 그룹들 모바일 맞춤 변경 */
+.detail-actions-row > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.detail-actions-row .btn,
+.btn-list-go {
+    text-align: center; /* 모바일 버튼 글씨 가운데 정렬 */
+    width: 100%;       /* 누르기 편하게 100% 폭 확장 */
+}
+   
+
+
+}
+
+</style>
+
+
+<div th:replace="~{layout/header :: header}"></div>
+
+<body>
+
+    <main>
+        <div class="detail-container">
+            
+            <div class="category-path">
+                카테고리: <span th:text="${detail.category1}">대분류</span> &gt; <span th:text="${detail.category2}">소분류</span>
+            </div>
+
+            <div class="detail-header">
+                <div class="detail-title-row">
+                    <h2 class="detail-title" th:text="${detail.title}">작성 제목 위치</h2>
+                </div>
+                <div class="detail-meta-row">
+                    <div>
+                        작성자: <strong th:text="${detail.nickName}"> 작성자 닉네임</strong>
+                        등록일: <span th:text="${#temporals.format(detail.createdAt, 'yyyy-MM-dd HH:mm')}">2026-06-19</span>
+                        수정일: <span th:text="${detail.editedAt != null} ? ${#temporals.format(detail.editedAt, 'yyyy-MM-dd HH:mm')} : '수정 안 됨'"></span>
+                    </div>
+                    <div class="stats-group">
+                        <span>조회수 <strong th:text="${detail.viewCnt}">0</strong></span>
+                        <span>댓글 수 <strong th:text="${detail.replyCnt}">0</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-info-card">
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 0.3rem;">리뷰 대상</span>
+                    <span class="product-name" th:text="${detail.productName}">제품명 정보</span>
+                </div>
+             
+                <div class="product-image-wrapper">
+                    <img th:if="${detail.productImage}" th:src="${detail.productImage}" alt="제품 사진">
+                    <span th:unless="${detail.productImage}" style="font-size: 0.8rem; color: var(--text-muted);">사진 없음</span>
+                </div>
+            </div>
+
+            <div class="detail-content-body" th:text="${detail.content}">
+                후기 내용
+            </div>
+
+            <div class="attached-images-grid" th:if="${detail.attachedFiles != null and !detail.attachedFiles.isEmpty()}">
+                <div class="image-item-box" th:each="file, iterStat : ${detail.attachedFiles}">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;" 
+                        th:text="'업로드한 이미지' + ${iterStat.count}">
+                        업로드한 이미지1
+                    </span>
+                    <img th:src="@{/upload/review/{name}(name=${file.savedName})}" 
+                        th:alt="${file.originalName}"
+                        style="width: 100%; height: auto; object-fit: contain; border-radius: 4px; display: block;">
+                </div>
+            </div>
+
+            <div class="detail-actions-row">
+                <div>
+                    <a href="/review" class="btn-list-go">
+                        목록으로
+                    </a>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div>
+                        <a th:href="${detail.productLink}" target="_blank" class="btn btn-link-out" style="display: inline-block; padding: 0.8rem 1.5rem; text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 4px;">
+                            🔗 제품 쇼핑몰 바로가기
+                        </a>
+                    </div>
+                    
+                    <a th:if="${#authentication.name == detail.userName}"
+                       th:href="@{/review/edit/{id}(id=${detail.boardId})}"
+                       class="btn-edit-dark"
+                       style="display: inline-block; padding: 0.8rem 1.5rem; background-color: #1a1a1a; color: #ffffff; border: 1px solid #1a1a1a; border-radius: 4px; text-decoration: none; font-size: 14px; font-weight: 500;">
+                        수정
+                    </a>
+                    
+                    <button th:if="${#authentication.name == detail.userName}" 
+                            type="button" 
+                            class="btn-delete-line" 
+                             style="padding: 0.8rem 1.5rem; background-color: #ffffff; color: #333333; border: 1px solid #ffffff; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer;"
+                            th:onclick="confirmDelete([[${detail.boardId}]])">
+                        삭제
+                    </button>
+                    
+                    <div id="btnLike" style="display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; font-size: 1.4rem; cursor: pointer; color: #333333;">
+                        <span class="like-icon" id="like-icon" 
+                                th:attr="data-id=${detail.boardId}"
+                                th:text="${isLikeOn} ? '♥' : '♡'" 
+                                th:style="${isLikeOn} ? 'color: #ff4d4f;' : 'color: #333333;'">
+                                ♡
+                        </span>
+
+                        <span class="like-count" style="margin-left: 5px;" th:text="${likeCount}">0</span>
+                        
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div> 
+
+   
+
+        <div class="comment-section">
+            <h5>댓글 <span th:text="${detail.replyCnt}">0</span></h5>
+            
+            <div class="comment-list-box">
+                <div th:if="${#lists.isEmpty(replyList)}" 
+                     class="comment-empty-box">
+                    등록된 댓글이 없습니다. 첫 댓글을 남겨보세요!
+                </div>
+                
+                <div th:unless="${#lists.isEmpty(replyList)}" 
+                    th:each="reply : ${replyList}" 
+                    th:classappend="${reply.parentsReplyId != null} ? 'child-reply' : ''"
+                    class="comment-item">
+                    
+                    <div class="comment-meta">
+                        <strong th:text="${reply.nickName}">작성자 닉네임</strong>
+                        <span th:if="${reply.parentsReplyId != null}" 
+                            th:text="|@${reply.targetNickName}|" 
+                            style="color: #ff6b81; font-weight: bold; font-size: 0.9rem;">@사용자 b</span>
+
+                    </div>
+                    
+                    <div class="comment-content-flex">
+                        <div class="comment-body"
+                             th:if="${!reply.deleted}" 
+                             th:text="${reply.replyContent}">
+                            사용자가 작성한 후기 댓글 내용이 이곳에 깔끔하게 출력됩니다.
+                        </div>
+
+                        <div class="comment-body deleted-comment" 
+                                th:if="${reply.deleted}" 
+                                style="color: #aaa; font-style: italic;">
+                            삭제된 댓글입니다.
+                        </div>
+
+                        <div class="comment-action-row" th:if="${#authentication.name != 'anonymousUser'} and ${reply.parentsReplyId == null}">
+                            <button type="button" class="btn-reply-toggle" th:data-reply-id="${reply.replyId}">
+                                답글 쓰기
+                            </button>
+                        </div>
+                    </div>
+                   
+                    <div class="reply-form-box hidden">
+                        <form class="reply-submit-form">
+
+                            <div class="reply-target-info">
+                            </div>
+
+                            <input type="hidden" name="boardId" th:value="${detail.boardId}">
+                            <input type="hidden" name="parentsReplyId" th:value="${reply.replyId}">
+                            
+                            <textarea class="reply-textarea" placeholder="답글을 입력하세요..."></textarea>
+                            
+                            <div class="reply-form-btns">
+                                <button type="button" class="btn-reply-cancel">취소</button>
+                                
+                                <button type="button" class="btn-reply-submit" onclick="postCommentReply(this)">
+                                    등록
+                                </button>
+                            </div>
+
+                           
+
+                        </form>
+                    </div>
+                    
+
+                    <div class="comment-more-wrap" th:if="${#authentication.name == reply.userName}">
+                        <button type="button" class="comment-more-btn">···</button>
+
+                        <div class="comment-more-menu">
+                            <button type="button" class="comment-edit-btn">
+                            수정하기
+                            </button>
+
+                            <button type="button" 
+                                    class="comment-delete-btn"
+                                    th:onclick="deleteReply([[${detail.boardId}]], [[${reply.replyId}]], this)">
+                            삭제하기
+                            </button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="comment-write-box">
+                <form th:action="@{/review/detail/{id}/reply(id=${detail.boardId})}" 
+                    class="review-comment-form"
+                    method="post">
+                    <textarea name="replyContent" 
+                            required 
+                            placeholder="댓글을 입력해주세요. 타인을 비방하는 글은 삭제될 수 있습니다."></textarea>
+                    
+                    <div class="comment-btn-row">
+                        <button type="submit" class="btn-reply-submit">
+                            등록
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</html>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const likeIcon = document.getElementById('like-icon');
+    const likeBtn = document.getElementById('btnLike');
+ 
+    
+    if (likeIcon && likeBtn) {
+        // HTML 타임리프(th:attr="data-id=${...}")에서 심어둔 게시글 번호 읽기
+        const boardId = likeIcon.getAttribute('data-id') || likeIcon.dataset.id;
+        
+        if (boardId) {
+            // 서버에 내가 이 글에 좋아요를 눌렀는지 물어봄
+            fetch(`/api/review/${boardId}/like-check`)
+                .then(response => response.json())
+                .then(data => {
+                    // 백엔드가 주는 true/false에 따라 하트 모양 스위칭
+                    if (data.isLikeOn) {
+                        likeIcon.textContent = "♥";
+                        likeIcon.style.color = "#ff4d4f"; // 누른 상태면 빨간색 하트
+                    } else {
+                        likeIcon.textContent = "♡";
+                        likeIcon.style.color = "#333333"; // 안 누른 상태면 기본색
+                    }
+                })
+                .catch(error => console.error("좋아요 상태 조회 실패:", error));
+        }
+
+        // ==========================================
+        // 🆕 [추가] 하트(div 영역 포함) 클릭 시 토글 요청
+        // ==========================================
+        likeBtn.addEventListener('click', function () {
+            if (!boardId) return;
+
+            fetch(`/api/review/${boardId}/toggle-like`, {
+                method: "POST"
+            })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert("로그인이 필요한 기능입니다.");
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data) return;
+
+                    // 변한 상태에 맞춰 하트 모양 변경
+                    if (data.isLikeOn) {
+                        likeIcon.textContent = "♥";
+                        likeIcon.style.color = "#ff4d4f";
+                    } else {
+                        likeIcon.textContent = "♡";
+                        likeIcon.style.color = "#333333";
+                    }
+
+                    // 💡 만약 화면에 실시간 좋아요 개수를 보여주는 구역(예: .like-count)이 있다면 
+                    // 아래 주석을 풀고 클래스나 ID 명을 맞춰 활용하세요.
+                    const countSpan = document.querySelector('.like-count');
+                    if (countSpan) countSpan.textContent = data.likeCount;
+                })
+                .catch(error => console.error("좋아요 처리 중 에러 발생:", error));
+        });
+    }
+    
+    // 1. [···] 버튼 클릭 시 드롭다운 메뉴 토글
+    document.querySelectorAll(".comment-more-btn").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation(); // 클릭 이벤트가 상위 태그로 번지는 것 차단
+            const menu = this.nextElementSibling; // 바로 뒤의 .comment-more-menu 타겟팅
+            
+            // 다른 열려있는 댓글 메뉴가 있다면 일괄 닫기
+            document.querySelectorAll(".comment-more-menu").forEach(m => {
+                if (m !== menu) m.classList.remove("active");
+            });
+            
+            menu.classList.toggle("active");
+        });
+    });
+
+    // 빈 화면 클릭 시 열려 있던 메뉴 닫기
+    document.addEventListener("click", function () {
+        document.querySelectorAll(".comment-more-menu").forEach(m => m.classList.remove("active"));
+    });
+
+    // 2. [수정하기] 버튼 클릭 시 편집 모드 전환
+    document.querySelectorAll(".comment-edit-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            // 💡 [핵심 수정] .comment-item 대신 버튼이 속한 개별 콘텐츠 구역(.comment-content-flex)만 조준합니다.
+            const contentFlex = this.closest(".comment-content-flex");
+            if (!contentFlex) return;
+
+            const bodyDiv = contentFlex.querySelector(".comment-body");
+            
+            // 💡 중복 실행 방지 조건도 contentFlex 내부만 검사하도록 수정
+            if (contentFlex.querySelector(".edit-textarea")) return;
+
+            const originalContent = bodyDiv.innerText; // 원본 댓글 내용 백업
+
+            // .comment-body 내부를 입력 폼 인터페이스로 교체
+            bodyDiv.innerHTML = `
+                <textarea class="edit-textarea">${originalContent}</textarea>
+                <div class="edit-btn-row">
+                    <button type="button" class="btn-cancel">취소</button>
+                    <button type="button" class="btn-save">저장</button>
+                </div>
+            `;
+
+            // [취소] 버튼 액션: 원본 텍스트로 원상복구
+            bodyDiv.querySelector(".btn-cancel").addEventListener("click", function () {
+                bodyDiv.innerHTML = originalContent;
+            });
+
+            // [저장] 버튼 액션: 비동기 데이터 처리 부분
+            bodyDiv.querySelector(".btn-save").addEventListener("click", function () {
+                const updatedContent = bodyDiv.querySelector(".edit-textarea").value.trim();
+                
+                if (!updatedContent) {
+                    alert("수정할 내용을 입력해 주세요.");
+                    return;
+                }
+
+                // TODO: 이 자리에 서버와 통신할 비동기 fetch 혹은 form 전송 코드를 작성합니다.
+                // 임시로 화면단 데이터만 바로 바꾸는 예시입니다.
+                alert("수정이 완료되었습니다.");
+                bodyDiv.innerHTML = updatedContent;
+            });
+        });
+    });
+
+
+    // 1. 모든 [답글 쓰기] 버튼들을 다 가져옵니다.
+    const replyToggleBtns = document.querySelectorAll(".btn-reply-toggle");
+
+    // 2. 반복문을 돌며 버튼 하나씩 센서를 달아줍니다.
+    replyToggleBtns.forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            
+            // ① 내가 누른 버튼과 가장 가까운 댓글 상자(.comment-item)를 위로 올라가며 찾습니다.
+            const commentBox = this.closest(".comment-item");
+            
+            // ② 그 댓글 상자 안 구역에 숨겨져 있는 답글 창(.reply-form-box)을 조준합니다.
+            const replyForm = commentBox.querySelector(".reply-form-box");
+
+            //   현재 댓글 상자 안에서 작성자의 닉네임 텍스트를 낚아챈다.
+            const targetNickName = commentBox.querySelector(".comment-meta strong").textContent;
+            
+            replyForm.querySelector(".reply-target-info").textContent = `${targetNickName}님에게 답글을 남기는 중...`;
+
+
+            // ③ [핵심] hidden 클래스가 있으면 빼버리고, 없으면 넣어줍니다. (왔다 갔다 스위치)
+            replyForm.classList.toggle("hidden");
+            
+        });
+    });
+
+});
+
+// 댓글 삭제 버튼을 클릭하면
+function deleteReply(boardId, replyId, btn) {
+    
+    // 1. 사용자 확인창
+    if (!confirm("댓글을 삭제하시겠습니까?")) {
+        return; // 취소 누르면 끝내기
+    }
+
+    // 2. 클릭된 버튼(btn)을 기준으로 상위 댓글 상자 찾기
+    const commentItem = btn.closest(".comment-item");
+
+    // 3. fetch 요청 날리기 (매개변수로 받은 값을 그대로 주소에 꽂아줍니다!)
+    fetch(`/review/detail/${boardId}/reply/delete/${replyId}`, {
+        method: "POST"
+    })
+    .then(function(response) {
+        if (response.ok) {
+            
+            if (commentItem) {
+                // ① 정상 댓글용 본문과 삭제된 댓글용 본문을 둘 다 제어합니다.
+                const normalBody = commentItem.querySelector(".comment-body:not(.deleted-comment)");
+                const deletedBody = commentItem.querySelector(".comment-body.deleted-comment");
+                
+                // 만약 정상 댓글이 띄워져 있었다면 내용 치환 후 스타일 적용
+                if (normalBody) {
+                    normalBody.textContent = "삭제된 댓글입니다.";
+                    normalBody.style.color = "#aaa";
+                    normalBody.style.fontStyle = "italic";
+                }
+                
+                // 타임리프가 처음에 '삭제된 댓글입니다'를 그렸을 때 비동기 삭제를 수용하기 위함
+                if (deletedBody) {
+                    deletedBody.style.display = "block";
+                }
+
+                // ② '답글 쓰기' 버튼 영역 숨기기
+                const actionRow = commentItem.querySelector(".comment-action-row");
+                if (actionRow) {
+                    actionRow.style.display = "none";
+                }
+
+                // ③ 더보기 메뉴 버튼(···) 및 내부 팝업 메뉴 통째로 안 보이게 숨김 처리
+                const moreWrap = commentItem.querySelector(".comment-more-wrap");
+                if (moreWrap) {
+                    moreWrap.style.display = "none";
+                }
+            }
+
+            alert("댓글이 삭제되었습니다.");
+        } else {
+            alert("삭제에 실패했습니다.");
+        }
+    })
+    .catch(function(error) {
+        console.error("에러 발생:", error);
+    });
+}
+
+// 대댓글 등록 버튼을 누르면
+function postCommentReply(btn) {
+    // 1. 클릭된 버튼(btn)을 기준으로 상위 Form 태그 찾기
+    const form = btn.closest(".reply-submit-form");
+    
+    // 2. Form 안의 입력값들 낚아채기
+    const boardId = form.querySelector("[name='boardId']").value;
+    const parentsReplyId = form.querySelector("[name='parentsReplyId']").value;
+    const replyContent = form.querySelector(".reply-textarea").value.trim();
+
+    // 3. 유효성 검사
+    if (!replyContent) {
+        alert("답글 내용을 입력해주세요.");
+        form.querySelector(".reply-textarea").focus();
+        return;
+    }
+
+    // 4. 서버로 보낼 데이터 구조화
+    const formData = {
+        boardId: boardId,
+        parentsReplyId: parentsReplyId,
+        replyContent: replyContent
+    };
+
+    // 5. 비동기 Fetch 요청
+    fetch(`/review/detail/${boardId}/reply/write`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("답글이 등록되었습니다.");
+            location.reload(); // 성공 시 새로고침해서 반영 확인!
+        } else {
+            alert("답글 등록에 실패했습니다.");
+        }
+    })
+    .catch(error => {
+        console.error("에러 발생:", error);
+    });
+}
+
+// 대댓글 취소 버튼을 누르면
+document.querySelectorAll(".btn-reply-cancel").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const replyForm = this.closest(".reply-form-box");
+        if (replyForm) {
+            replyForm.classList.add("hidden"); // 다시 hidden 클래스를 넣어서 숨김
+            
+            // 옵션: 입력창에 써두었던 글자도 깨끗하게 지워주고 싶다면 아래 코드 추가
+            const textarea = replyForm.querySelector(".reply-textarea");
+            if (textarea) textarea.value = "";
+        }
+    });
+});
+</script>
+<script th:src="@{/js/review/review_delete.js}"></script>
+<script th:src="@{/js/review/review_like.js}"></script>

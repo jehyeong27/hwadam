@@ -1,0 +1,249 @@
+package com.miles.beauminity.controller.review_board;
+
+import java.security.Principal;
+import java.util.List;
+
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import com.miles.beauminity.security.CustomUserDetails;
+import com.miles.beauminity.service.review_board.ReviewService;
+import com.miles.beauminity.vo.board.MasterBoardFileVO;
+import com.miles.beauminity.vo.board.PageVO;
+import com.miles.beauminity.vo.review.ReviewBoardVO;
+import com.miles.beauminity.vo.review.ReviewReplyVO;
+import com.miles.beauminity.vo.review.ReviewSearchVO;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+
+
+
+
+
+@Controller
+@RequiredArgsConstructor // 1. 서비스 주입을 위한 의존성 주입 어노테이션 추가
+public class ReviewController { // 역할: 후기 게시판에 대한 사용자의 요청 처리. 사용자가 보는 웹페이지를 보여주기 위한 요청 처리
+                   
+    // 비즈니스 로직을 수행할 서비스 레이어 선언
+    private final ReviewService reviewService;
+    
+    // 후기 게시판 페이지 요청 처리
+    @GetMapping("/review")
+    public String reviewPage(@ModelAttribute PageVO pageVO,
+                             @ModelAttribute ReviewSearchVO searchVO,
+                              Model model) {
+        // 1. 서비스 호출을 통해 전체 후기 리스트 데이터 확보
+        
+        String boardtype = "review";
+
+        //전체 게시글수 확인
+        int count = reviewService.getTypeBoardCount(boardtype, pageVO, searchVO); 
+
+
+        // System.out.println("게시글의 수:" + count);
+        pageVO.setSize(12);
+        pageVO.pageInfo(count);
+
+        System.out.println("계산된 총 페이지 수" + pageVO.getTotalPage());
+        List<ReviewBoardVO> reviewList = reviewService.getReviewBoardList(boardtype, pageVO, searchVO);
+
+      
+
+        // 2. **타임리프 화면으로 데이터를 "reviewList"라는 열쇠(key)로 배송
+        model.addAttribute("reviewList", reviewList);
+        model.addAttribute("pageVO",pageVO);
+        model.addAttribute("searchVO", searchVO);
+
+        return "review_board/review";
+    }
+
+
+
+    // 후기 게시판 상세 페이지 요청 처리
+    @GetMapping("/review/detail/{boardId}")
+    public String reviewDetailPage(@PathVariable("boardId") Long boardId,
+                                    Model model,
+                                    @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            // 1. 상세 데이터
+            ReviewBoardVO detail = reviewService.getReviewBoardDetail(boardId);
+            
+            // 2. 조회수 상승은 상세 페이지에서 바로 하지 말고, 
+            // 서비스 내부에서 예외 처리를 하거나 컨트롤러에서 분리하는 것이 안전합니다.
+            reviewService.viewUp(boardId); 
+
+            // 3. 댓글
+            model.addAttribute("replyList", reviewService.getReplyList(boardId));
+            model.addAttribute("detail", detail);
+            
+            // 4. 좋아요 로직
+            model.addAttribute("isLikeOn", (userDetails != null) && reviewService.isLikeON(boardId, userDetails.getUsername()));
+            model.addAttribute("likeCount", reviewService.getLikeCount(boardId));
+
+            return "review_board/detail";
+            
+        } catch (Exception e) {
+            e.printStackTrace(); // 어디서 터지는지 콘솔에서 확인하세요!
+            return "redirect:/review"; // 에러 발생 시 안전하게 목록으로 리다이렉트
+        }
+    }
+    
+
+    
+    // 후기 게시판 리뷰 쓰기 요청 처리
+    @GetMapping("/review/write")
+    public String reviewWrite(@AuthenticationPrincipal CustomUserDetails loginMember, Model model) {
+        // 로그인 기능 구현 전까지 사용할 임시 작성자 이름을 모델에 추가
+        // model.addAttribute("loginUser", "테스트유저");
+
+        
+        // 1. 로그인 상태일 때 세션 ID 추출 및 모델 주입
+        String nickName = loginMember.getNickname();
+        model.addAttribute("loginUser",nickName);
+
+    
+
+        return "review_board/write";
+    }
+
+    // 후기 게시판 리뷰 작성글 등록 요청 처리
+    @PostMapping("/review/write")
+    public String registerReview(@ModelAttribute ReviewBoardVO reviewBoardVO, Principal principal) {
+        
+        // 로그인 미구현 대안: master_board.member_id(FK) 제약 조건 통과용 임시 ID 강제 설정 
+        // ** 주의 ** 실제 DB member 테이블에 username이 'testuser01' 인 회원이 있어야 함
+        // reviewBoardVO.setUserName("testuser01");
+
+        String userName = principal.getName();
+
+        reviewBoardVO.setUserName(userName);
+
+        // 실제로 3개의 테이블에 순차 저장 및 파일 물리 저장을 수행하는 서비스 매서드 호출
+        reviewService.registerReviewPost(reviewBoardVO);
+
+        
+        return "redirect:/review";  // 등록 완료 후 후기 게시판 목록 페이지로 리다이렉트 처리
+    }
+    
+    // 후기 게시판 리뷰 작성글 수정 페이지 요청 처리
+    @GetMapping("/review/edit/{boardId}")
+    public String editReviewDetailPage(@PathVariable ("boardId") Long boardId,Principal principal, Model model) {
+
+        // 서비스 호출을 통해 후기 상세 데이터 가져오기
+        ReviewBoardVO detail = reviewService.getReviewBoardDetail(boardId);
+
+        // 비로그인 상태이거나 로그안한 Id와 게시글 작성자 Id가 다를 경우 예외 발생 처리
+        if (principal == null || !principal.getName().equals(detail.getUserName())) {
+            
+            return "redirect:/board/review/detail/" + boardId + "?error=unauthorized";
+        }
+
+        List<MasterBoardFileVO> files = detail.getAttachedFiles();
+
+        // 검증 통과한 사용자(게시글 작성한 본인)일 때만 수정 폼 화면으로 이동시키기
+        model.addAttribute("fileList", files);
+        model.addAttribute("reviewForm",detail);
+    
+        
+
+        return "review_board/edit"; // 수정 화면 HTML 파일명
+    }
+    
+    // 후기 게시판 리뷰 작성글 수정 요청 처리
+    @PostMapping("/review/edit/{id}")
+    public String reviewEditUpdate(
+            @PathVariable("id") Long id,
+            @ModelAttribute("reviewForm") ReviewBoardVO reviewForm) {
+
+        System.out.println("컨트롤러 진입 성공");
+        System.out.println("수정 대상 게시글 ID (path): " + id);
+        System.out.println("VO에서 꺼낸 boardId: " + reviewForm.getBoardId());
+
+        // 서비스 레이어로 파일 배열 정보와 게시글 수정 정보 토스
+        reviewService.updateReviewBoard(reviewForm);
+
+        return "redirect:/review/detail/" + id;
+    }
+
+    // 후기 게시판 리뷰 작성글 삭제 요청 처리
+    @PostMapping("/review/delete/{boardId}")
+    public String deleteReview(@PathVariable("boardId") Long boardId, Principal principal ) {
+        
+        // 1. 서비스 호출을 통해 후기 상세 데이터 가져오기 (작성자 ID 확인용)
+        ReviewBoardVO detail = reviewService.getReviewBoardDetail(boardId);
+
+        // 2. 비로그인 상태이거나 로그인한 ID와 게시글 작성자 Id가 다를 경우 권한 에러 처리
+        if (principal == null || !principal.getName().equals(detail.getUserName())) {
+            // 비동기 fetch 통신이므로 redirect가 아닌 403 Forbidden 상태코드를 보냅니다.
+            return "redirect:/error/403";
+        }
+        // 3. 검증 통과한 사용자(게시글 작성한 본인)일 때만 실제 삭제 서비스 호출
+        reviewService.delectReviewBoard(boardId); // 실제 DB에서 글을 지우는 서비스
+
+        return "redirect:/review";
+    }
+    
+    // 리뷰 게시판 댓글 등록 요청 처리
+    @PostMapping("/review/detail/{boardId}/reply")
+    public String registerReply(
+        @PathVariable Long boardId, // 주소창에서 boardId 빼오기
+        @ModelAttribute ReviewReplyVO replyVO,
+        Principal principal     // 로그인한 사용자 정보 가져오기
+    ) {
+        if(principal == null) {
+            return "redirect:/login";
+        }
+
+        replyVO.setUserName(principal.getName()); // 로그인 아이디 채우기
+        replyVO.setBoardId(boardId);              // 게시글 번호 채우기
+
+        reviewService.registerReply(replyVO); // 댓글 DB에 저장
+
+        //댓글 수 상승
+        reviewService.replyUp(boardId);
+        
+        return "redirect:/review/detail/" + boardId;
+    }
+
+    // 리뷰 게시판 댓글, 내냇글 삭제 요청 처리
+    @PostMapping("/review/detail/{boardId}/reply/delete/{replyId}")
+    @ResponseBody
+    public String deleteReply(@PathVariable Long boardId,
+                              @PathVariable Long replyId
+    ) {
+        reviewService.removeReply(replyId);
+        reviewService.replyDown(boardId);
+        
+        return "success";
+    }
+    
+    //리뷰 게시판 내냇글 등록 요청 처리
+    @PostMapping("/review/detail/{boardId}/reply/write")
+    @ResponseBody
+    public String postCommentReply(@PathVariable("boardId") Long boardId,
+                                   @RequestBody ReviewReplyVO replyVO,
+                                   Principal principal
+    ) {
+        replyVO.setBoardId(boardId);
+        replyVO.setUserName(principal.getName());
+
+        reviewService.registerReply(replyVO);
+        reviewService.replyUp(boardId);
+        
+        return "success";
+    }
+    
+    
+    
+   
+}

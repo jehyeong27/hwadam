@@ -1,0 +1,119 @@
+body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    margin: 0 auto;
+    padding: 0;
+    color: #333;
+    background: #fff;
+    line-height: 1.6;
+}
+
+.login-container {
+    max-width: 350px;
+    margin: 160px auto;
+    padding: 40px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    text-align: center;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+/* 로고 및 타이틀 섹션 */
+.logo-section {
+    margin-bottom: 30px;
+}
+
+.logo-section img {
+    width: 200px;
+}
+
+.logo-section p {
+    color: #888;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+.input-group input { 
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box; 
+    border: 1px solid #ddd;
+    border-radius: 4px; 
+}
+
+.login-btn { 
+    width: 100%;
+    padding: 14px;
+    background: #000;
+    color: #fff; 
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+#login-error-text {
+    color: #FFA1C1;
+    font-size: 0.8rem;
+    display: block;
+    text-align: left;
+    font-weight: 500;
+}
+
+#toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 53%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-wrapper { 
+    position: relative;
+    width: 100%; 
+}
+.password-wrapper input { 
+    width: 100%;
+    padding: 12px 40px 12px 12px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px; 
+}
+
+/* 변경된 하단 링크 스타일 */
+.auth-links {
+    margin-top: 25px;
+    font-size: 0.85em;
+    color: #999;
+}
+
+.auth-links a {
+    color: #555;
+    text-decoration: none;
+    margin: 0 5px;
+    font-weight: bold;
+}
+
+.auth-links span {
+    margin: 0 5px;
+    color: #ddd;
+}

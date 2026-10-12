@@ -1,0 +1,629 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f7f8fa;
+    color: #111827;
+    font-family: Arial, sans-serif;
+}
+
+/* ===============================
+   작성하기 화면 크기/위치와 동일하게 강제
+   =============================== */
+
+.page-wrap {
+    width: 1132px !important;
+    max-width: 1132px !important;
+    min-width: 1132px !important;
+
+    margin: 5px auto 80px auto !important;
+    padding: 32px !important;
+
+    background: #ffffff !important;
+    border: 1px solid #dfe3ea !important;
+    border-radius: 4px !important;
+}
+
+/* 상단 제목 영역 */
+.write-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    padding: 0 0 16px 0 !important;
+    margin-bottom: 20px !important;
+
+    border-bottom: 2px solid #222 !important;
+}
+
+.write-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+.write-title h1 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    color: #111827 !important;
+}
+
+.write-title span {
+    font-size: 13px !important;
+    color: #7d8ca3 !important;
+    white-space: nowrap !important;
+}
+
+.back-link {
+    border: none !important;
+    background: transparent !important;
+    color: #111827 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+}
+
+/* 안내 박스 */
+.notice {
+    width: 100% !important;
+    margin-bottom: 22px !important;
+    padding: 14px 16px !important;
+
+    border: 1px solid #f1e5cf !important;
+    background: #fffdf8 !important;
+    border-radius: 4px !important;
+
+    font-size: 13px !important;
+    color: #7d8ca3 !important;
+}
+
+.notice b {
+    color: #FFA1C1 !important;
+}
+
+/* 좌우 2단 구조 - 작성하기 화면처럼 */
+.edit-grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 520px 520px !important;
+    gap: 24px !important;
+    align-items: start !important;
+}
+
+/* 왼쪽 카드 */
+.preview-card {
+    width: 520px !important;
+    background: #ffffff !important;
+    border: 1px solid #dfe3ea !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+}
+
+/* 왼쪽 큰 이미지 미리보기 */
+.preview-photo {
+    width: 100% !important;
+    height: 520px !important;
+    background: #e8dccb !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.tilt-photo {
+    width: 270px !important;
+    height: 380px !important;
+
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.9) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    transform: rotate(-8deg) !important;
+
+    color: #52627a !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+}
+
+/* 왼쪽 설명 */
+.preview-info {
+    padding: 16px 18px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #eef1f5 !important;
+}
+
+.preview-info strong {
+    display: block !important;
+    margin-bottom: 6px !important;
+
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    color: #111827 !important;
+}
+
+.preview-info p {
+    margin: 0 !important;
+    font-size: 12px !important;
+    color: #7d8ca3 !important;
+}
+
+/* 기존 이미지 리스트 */
+.current-image-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+
+    padding: 16px 18px 18px !important;
+    background: #ffffff !important;
+}
+
+.current-image {
+    position: relative !important;
+
+    width: 82px !important;
+    height: 82px !important;
+
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    background: #f1f3f6 !important;
+    border: 1px solid #dfe3ea !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    color: #667085 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.current-image.is-main {
+    border-color: #FACB47 !important;
+}
+
+.current-image.is-main::after {
+    content: "대표";
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+
+    padding: 3px 7px;
+    border-radius: 999px;
+
+    background: #FFA1C1;
+    color: #3b2a00;
+
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.current-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+.current-image button,
+.current-image-delete-btn {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+
+    width: 22px !important;
+    height: 22px !important;
+
+    border: none !important;
+    border-radius: 50% !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    color: #ffffff !important;
+
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+
+    cursor: pointer !important;
+}
+
+/* 오른쪽 폼 카드 */
+.form-card {
+    width: 520px !important;
+    background: #ffffff !important;
+
+    border: 1px solid #dfe3ea !important;
+    border-radius: 4px !important;
+
+    padding: 26px 22px 24px !important;
+}
+
+.form-card form {
+    width: 100% !important;
+}
+
+/* 폼 그룹 */
+.form-group {
+    margin-bottom: 24px !important;
+}
+
+.form-label {
+    display: block !important;
+    margin-bottom: 10px !important;
+
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #111827 !important;
+}
+
+/* 업로드 박스 */
+.upload-box {
+    width: 100% !important;
+    height: 140px !important;
+
+    border: 1px dashed #d7dde7 !important;
+    background: #fffdf8 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+
+    color: #7d8ca3 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.upload-btn {
+    border: none !important;
+    background: #111827 !important;
+    color: #ffffff !important;
+
+    padding: 10px 18px !important;
+
+    font-size: 13px !important;
+    font-weight: 900 !important;
+
+    cursor: pointer !important;
+}
+
+.image-count {
+    margin-top: 8px !important;
+    text-align: right !important;
+
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: #667085 !important;
+}
+
+/* 입력창 */
+textarea {
+    width: 100% !important;
+    height: 120px !important;
+
+    padding: 14px 16px !important;
+
+    border: 1px solid #d7dde7 !important;
+    background: #ffffff !important;
+
+    resize: none !important;
+    outline: none !important;
+
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #111827 !important;
+    font-family: inherit !important;
+}
+
+input[type="text"] {
+    width: 100% !important;
+    height: 48px !important;
+
+    padding: 0 14px !important;
+
+    border: 1px solid #d7dde7 !important;
+    background: #ffffff !important;
+
+    outline: none !important;
+
+    font-size: 14px !important;
+    color: #111827 !important;
+    font-family: inherit !important;
+}
+
+textarea:focus,
+input[type="text"]:focus {
+    border-color: #FFA1C1 !important;
+}
+
+.hint {
+    margin-top: 8px !important;
+    font-size: 12px !important;
+    color: #8b98aa !important;
+}
+
+/* 해시태그 */
+.tag-row {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+.tag-row input {
+    flex: 1 !important;
+}
+
+.tag-add-btn {
+    width: 60px !important;
+
+    border: none !important;
+    background: #111827 !important;
+    color: #ffffff !important;
+
+    font-size: 13px !important;
+    font-weight: 900 !important;
+
+    cursor: pointer !important;
+}
+
+.tag-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+
+    margin-top: 12px !important;
+}
+
+.tag-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+
+    height: 28px !important;
+    padding: 0 10px !important;
+
+    border-radius: 999px !important;
+    background: #fcf2f5 !important;
+    border: 1px solid #fc568d !important;
+    color: #c85c88 !important;
+
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.tag-chip button {
+    border: none !important;
+    background: transparent !important;
+    color: #FFA1C1 !important;
+
+    font-weight: 900 !important;
+    cursor: pointer !important;
+
+    padding: 0 !important;
+}
+
+/* 구분선 */
+.line {
+    height: 1px !important;
+    background: #eef1f5 !important;
+    margin: 24px 0 !important;
+}
+
+/* 버튼 */
+.actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+}
+
+.cancel,
+.submit {
+    min-width: 92px !important;
+    height: 42px !important;
+
+    border: none !important;
+
+    font-size: 14px !important;
+    font-weight: 900 !important;
+
+    cursor: pointer !important;
+}
+
+.cancel {
+    background: #f1f3f6 !important;
+    color: #4b5563 !important;
+}
+
+.submit {
+    background: #111827 !important;
+    color: #ffffff !important;
+}
+/* 대표 이미지 미리보기 영역 고정 */
+.preview-photo {
+    width: 100% !important;
+    height: 520px !important;
+    min-height: 520px !important;
+    max-height: 520px !important;
+    background: #e8dccb !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+/* 기존 기울어진 박스 제거하고, 고정 영역 전체 사용 */
+.tilt-photo {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    transform: none !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* 대표 이미지가 미리보기 영역 안에 꽉 차게 */
+#main-preview-image {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+/* 사진 없을 때 문구도 영역 가운데 고정 */
+#main-preview-text {
+    width: 100% !important;
+    height: 520px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #52627a;
+    font-size: 14px;
+    font-weight: 800;
+}
+/* 대표 이미지 미리보기 영역은 항상 고정 */
+.preview-photo {
+    width: 100% !important;
+    height: 520px !important;
+    min-height: 520px !important;
+    max-height: 520px !important;
+    background: #e8dccb !important;
+    overflow: hidden !important;
+}
+
+/* 대표 이미지 박스 */
+.tilt-photo {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    transform: none !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* 대표 이미지가 있을 때 */
+#main-preview-image {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    object-fit: cover !important;
+    display: block;
+}
+
+/* 대표 이미지가 없을 때 문구 중앙 정렬 */
+#main-preview-text {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #52627a;
+    font-size: 14px;
+    font-weight: 800;
+}
+/* 대표 이미지 영역 자체는 항상 고정 */
+.preview-photo {
+    width: 100% !important;
+    height: 520px !important;
+    min-height: 520px !important;
+    max-height: 520px !important;
+    background: #ffe1eb !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 사진 없을 때: 원래 대표 이미지 박스 */
+.tilt-photo {
+    width: 270px !important;
+    height: 380px !important;
+    min-height: 380px !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.9) !important;
+    transform: rotate(-8deg) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    color: #52627a !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+}
+
+/* 사진 있을 때만: 베이지 영역 전체에 사진 꽉 차게 */
+.tilt-photo.has-image {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 520px !important;
+    transform: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* 대표 이미지 */
+#main-preview-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: none;
+}
+
+/* 사진 없을 때 글씨 */
+#main-preview-text {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =========================
+   상단/하단 주요 버튼 hover 통일
+========================= */
+
+/* 피드로 돌아가기 */
+.back-link:hover {
+    color: #FFA1C1 !important;
+}
+
+/* 업로드 버튼 */
+.upload-btn:hover {
+    background: #FFA1C1 !important;
+    color: #ffffff !important;
+}
+
+/* 등록 버튼 */
+.submit:hover {
+    background: #FFA1C1 !important;
+    color: #ffffff !important;
+}
+
+/* 취소 버튼은 살짝 강조만 */
+.cancel:hover {
+    background: #ffe4ec !important;
+    color: #FFA1C1 !important;
+}
+
+/* 태그 추가 버튼도 통일 */
+.tag-add-btn:hover {
+    background: #FFA1C1 !important;
+    color: #ffffff !important;
+}
+
+/* 이미지 업로드 박스 버튼 (있으면) */
+.file-area button:hover {
+    background: #FFA1C1 !important;
+    color: #ffffff !important;
+}

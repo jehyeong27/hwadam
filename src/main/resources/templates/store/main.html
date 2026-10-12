@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>화담 : 전체 상품</title>
+
+  <link rel="icon"
+        type="image/png"
+        th:href="@{/images/common/icon.png}">
+
+  <link rel="stylesheet"
+        th:href="@{/css/common/header.css}">
+
+  <link rel="stylesheet"
+        th:href="@{/css/common/footer.css}">
+
+  <link rel="stylesheet"
+        th:href="@{/css/store/main.css}">
+</head>
+
+<body>
+
+  <header th:replace="~{layout/header :: header}"></header>
+
+
+  <main class="store-all-main">
+
+    <div class="store-all-container">
+
+
+      
+
+
+      <!-- 상품 검색 -->
+      <section class="store-search-section">
+
+        <form class="store-search-form"
+              th:action="@{/store}"
+              method="get">
+
+          <input type="text"
+                 name="query"
+                 class="store-search-input"
+                 th:value="${query}"
+                 placeholder="상품명 또는 브랜드를 검색해보세요."
+                 aria-label="상품 검색">
+
+          <input type="hidden"
+                 name="category2"
+                 th:value="${category2}">
+
+          <button type="submit"
+                  class="store-search-button">
+            검색
+          </button>
+
+        </form>
+
+      </section>
+
+
+      <div class="store-content-layout">
+
+
+        <!-- 왼쪽 카테고리 -->
+        <aside class="store-category-sidebar">
+
+          <h2 class="store-category-title">
+            카테고리
+          </h2>
+
+
+          <div class="store-category-group">
+
+            <h3>전체 분류</h3>
+
+            <ul class="store-category-list">
+
+
+              <!-- 전체 -->
+              <li>
+
+                <a th:href="@{/store}"
+                   class="store-category-link"
+                   th:classappend="${category2 == null
+                                    or category2 == ''}
+                                    ? ' active' : ''">
+
+                  <span>전체</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 스킨케어 -->
+              <li>
+
+                <a th:href="@{/store(category2='스킨케어')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '스킨케어'}
+                                    ? ' active' : ''">
+
+                  <span>스킨케어</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 메이크업 -->
+              <li>
+
+                <a th:href="@{/store(category2='메이크업')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '메이크업'}
+                                    ? ' active' : ''">
+
+                  <span>메이크업</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 클렌징 -->
+              <li>
+
+                <a th:href="@{/store(category2='클렌징')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '클렌징'}
+                                    ? ' active' : ''">
+
+                  <span>클렌징</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 선케어 -->
+              <li>
+
+                <a th:href="@{/store(category2='선케어')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '선케어'}
+                                    ? ' active' : ''">
+
+                  <span>선케어</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 마스크팩 -->
+              <li>
+
+                <a th:href="@{/store(category2='마스크팩')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '마스크팩'}
+                                    ? ' active' : ''">
+
+                  <span>마스크팩</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 헤어케어 -->
+              <li>
+
+                <a th:href="@{/store(category2='헤어케어')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '헤어케어'}
+                                    ? ' active' : ''">
+
+                  <span>헤어케어</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 바디케어 -->
+              <li>
+
+                <a th:href="@{/store(category2='바디케어')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '바디케어'}
+                                    ? ' active' : ''">
+
+                  <span>바디케어</span>
+
+                </a>
+
+              </li>
+
+
+              <!-- 향수 -->
+              <li>
+
+                <a th:href="@{/store(category2='향수')}"
+                   class="store-category-link"
+                   th:classappend="${category2 == '향수'}
+                                    ? ' active' : ''">
+
+                  <span>향수</span>
+
+                </a>
+
+              </li>
+
+            </ul>
+
+          </div>
+
+        </aside>
+
+
+        <!-- 오른쪽 상품 영역 -->
+        <section class="store-product-area">
+
+
+          <!-- 선택 조건 -->
+          <div class="store-filter-summary">
+
+            <span class="store-filter-label">
+
+            </span>
+
+
+            <!-- 카테고리 조건 -->
+            <span class="store-filter-chip"
+                  th:if="${category2 != null
+                           and !#strings.isEmpty(category2)}">
+
+
+
+            
+
+            </span>
+
+
+            <!-- 검색어 조건 -->
+            <span class="store-filter-chip"
+                  th:if="${query != null
+                           and !#strings.isEmpty(query)}">
+
+              검색어&nbsp;
+
+              <span th:text="${query}">
+                수분크림
+              </span>
+
+              <button type="button"
+                      aria-label="검색어 삭제"
+                      onclick="location.href='/store'">
+                ×
+              </button>
+
+            </span>
+
+
+            <button type="button"
+                    class="store-filter-reset"
+                    onclick="location.href='/store'">
+
+              전체 초기화
+
+            </button>
+
+          </div>
+
+
+          <!-- 상품 개수 및 정렬 -->
+          <div class="store-result-toolbar">
+
+            <div class="store-result-title">
+
+              <h2>상품 목록</h2>
+
+              <span>
+                총
+
+                <strong th:text="${totalCount != null
+                                  ? totalCount
+                                  : 0}">
+                  0
+                </strong>
+
+                개
+              </span>
+
+            </div>
+
+
+            <!-- 상품 정렬 -->
+            <form th:action="@{/store}"
+                  method="get">
+
+              <input type="hidden"
+                     name="query"
+                     th:value="${query}">
+
+              <input type="hidden"
+                     name="category2"
+                     th:value="${category2}">
+
+              <select name="sort"
+                      class="store-sort-select"
+                      aria-label="상품 정렬"
+                      onchange="this.form.submit()">
+
+                <option value="sim"
+                        th:selected="${sort == null
+                                      or sort == 'sim'}">
+
+                  추천순
+
+                </option>
+
+                <option value="asc"
+                        th:selected="${sort == 'asc'}">
+
+                  낮은 가격순
+
+                </option>
+
+                <option value="dsc"
+                        th:selected="${sort == 'dsc'}">
+
+                  높은 가격순
+
+                </option>
+
+              </select>
+
+            </form>
+
+          </div>
+
+
+          <!-- 상품이 없을 때 -->
+          <div class="store-empty"
+               th:if="${storeList == null
+                        or #lists.isEmpty(storeList)}">
+
+            <strong>
+              조건에 맞는 상품이 없어요.
+            </strong>
+
+            <p>
+              다른 검색어나 카테고리로 다시 찾아보세요.
+            </p>
+
+          </div>
+
+
+          <!-- 상품 목록 -->
+          <div class="store-product-grid"
+               th:if="${storeList != null
+                        and !#lists.isEmpty(storeList)}">
+
+            <article class="store-product-card"
+                     th:each="product : ${storeList}"
+                     th:data-product-id="${product.productId}">
+
+
+              <!-- 상품 이미지 -->
+              <div class="store-product-image">
+
+                <button type="button"
+                        class="store-like-button"
+                        th:data-product-id="${product.productId}"
+                        aria-label="상품 찜하기">
+
+                  ♡
+
+                </button>
+
+
+                <img th:if="${product.image != null
+                              and !#strings.isEmpty(product.image)}"
+                     th:src="${product.image}"
+                     th:alt="${product.title}">
+
+
+                <img th:unless="${product.image != null
+                                  and !#strings.isEmpty(product.image)}"
+                     th:src="@{/images/store/no-image.png}"
+                     alt="상품 이미지 없음">
+
+              </div>
+
+
+              <!-- 상품 정보 -->
+              <div class="store-product-body">
+
+
+                <!-- 브랜드 -->
+                <div class="store-product-brand"
+                     th:text="${product.brand != null
+                               and !#strings.isEmpty(product.brand)
+                               ? product.brand
+                               : '브랜드 정보 없음'}">
+
+                  브랜드
+
+                </div>
+
+
+                <!-- 상품명 -->
+                <p class="store-product-name"
+                   th:text="${product.title != null
+                             ? product.title
+                             : '상품명 정보 없음'}">
+
+                  상품명
+
+                </p>
+
+
+                <!-- 카테고리 -->
+                <div class="store-product-category">
+
+                  <span th:if="${product.category2 != null
+                                and !#strings.isEmpty(product.category2)}"
+                        th:text="${product.category2}">
+
+                    중분류
+
+                  </span>
+
+                  <span th:if="${product.category3 != null
+                                and !#strings.isEmpty(product.category3)}"
+                        th:text="${' · ' + product.category3}">
+
+                    · 소분류
+
+                  </span>
+
+                </div>
+
+
+                <!-- 가격 -->
+                <div class="store-product-price">
+
+                  <span th:text="${#numbers.formatInteger(
+                                    product.lprice,
+                                    1,
+                                    'COMMA'
+                                  )}">
+
+                    0
+
+                  </span>
+
+                  <small>원</small>
+
+                </div>
+
+
+                <!-- 상품 버튼 -->
+                <div class="store-product-actions">
+
+                  <button type="button"
+                          class="store-cart-button"
+                          th:data-product-id="${product.productId}">
+
+                    장바구니
+
+                  </button>
+
+                  <button type="button"
+                          class="store-buy-button"
+                          th:data-product-id="${product.productId}">
+
+                    구매하기
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </article>
+
+          </div>
+
+
+          <!-- 페이지 이동 -->
+          <nav class="store-pagination"
+               th:if="${totalPages != null
+                        and totalPages > 1}"
+               aria-label="상품 페이지">
+
+
+            <!-- 이전 페이지 -->
+            <a class="store-page-button"
+               th:if="${currentPage != null
+                        and currentPage > 1}"
+               th:href="@{/store(
+                          page=${currentPage - 1},
+                          query=${query},
+                          category2=${category2},
+                          sort=${sort}
+                        )}">
+
+              ‹
+
+            </a>
+
+
+            <!-- 페이지 번호 -->
+            <a class="store-page-button"
+               th:each="pageNo : ${#numbers.sequence(1, totalPages)}"
+               th:href="@{/store(
+                          page=${pageNo},
+                          query=${query},
+                          category2=${category2},
+                          sort=${sort}
+                        )}"
+               th:text="${pageNo}"
+               th:classappend="${pageNo == currentPage}
+                                ? ' active' : ''">
+
+              1
+
+            </a>
+
+
+            <!-- 다음 페이지 -->
+            <a class="store-page-button"
+               th:if="${currentPage != null
+                        and currentPage < totalPages}"
+               th:href="@{/store(
+                          page=${currentPage + 1},
+                          query=${query},
+                          category2=${category2},
+                          sort=${sort}
+                        )}">
+
+              ›
+
+            </a>
+
+          </nav>
+
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <footer th:replace="~{layout/footer :: footer}"></footer>
+
+</body>
+
+</html>

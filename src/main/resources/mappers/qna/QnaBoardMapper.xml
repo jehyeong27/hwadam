@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.miles.beauminity.mapper.qna_board.QnaBoardMapper">
+
+<resultMap id="communityResultMap" type="com.miles.beauminity.vo.qna_board.QnaBoardCompleteVO">
+    <id property="boardId" column="board_id"/>
+    <result property="category" column="category"/>
+    <result property="title" column="title"/>
+    <result property="nickname" column="nickname"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="viewCnt" column="view_cnt"/>
+    <result property="replyCnt" column="reply_cnt"/>
+</resultMap>
+
+    <!-- 게시글에 정보 등록 -->
+    <insert id="insertQna"
+                parameterType="com.miles.beauminity.vo.qna_board.QnaBoardVO">
+        INSERT INTO qna_board
+        (board_id, category)
+        VALUES (#{boardId}, #{category})
+    </insert>
+
+    <!-- 조인해서 비교하고 가져온다. if문을 쓰면 카테고리 없어도 생략되ㄴ -->
+    <select id="selectCommuByCategory"
+            resultMap="communityResultMap">
+        SELECT 
+            mb.board_id,
+            q.category,
+            mb.title,
+            m.nickname,
+            mb.created_at,
+            mb.view_cnt,
+            mb.reply_cnt
+            FROM master_board mb
+            INNER JOIN qna_board q
+            ON mb.board_id = q.board_id
+            INNER JOIN member m
+            ON mb.username = m.username
+            WHERE mb.board_type = #{type} AND mb.deleted = 0
+
+            <if test="category != null and category != '전체보기'">
+            
+                AND q.category=#{category}
+
+            </if>
+
+            <if test="startDate != null">
+            
+                AND mb.created_at &gt;= #{startDate}
+
+            </if>
+
+            <if test="endDate != null">
+            
+                AND mb.created_at &lt;= #{endDate}
+            
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                <choose>
+                    <when test="searchType == 'title'">
+                        AND mb.title LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <when test="searchType == 'content'">
+                        AND mb.content LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <when test="searchType == 'writer'">
+                        AND m.nickname LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <otherwise>
+                        AND (
+                            title LIKE CONCAT('%', #{keyword}, '%')
+                            OR content LIKE CONCAT('%', #{keyword}, '%')
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+
+            <choose>
+                <when test="sort == '최신순'">
+                    ORDER BY mb.board_id DESC
+                </when>
+                <when test="sort == '조회순'">
+                    ORDER BY mb.view_cnt DESC
+                </when>
+                <otherwise>
+                    ORDER BY mb.board_id DESC
+                </otherwise>
+            </choose>
+            LIMIT #{page.offset}, #{page.size}
+    </select>
+
+    <!-- 게시글 수 확인 -->
+    <select id="getQnaCountByCategory"
+            resultType="Int">
+        SELECT COUNT(*)
+            FROM master_board mb
+            INNER JOIN qna_board q
+                ON mb.board_id = q.board_id
+            INNER JOIN member m
+                ON mb.username = m.username
+            WHERE mb.board_type = #{type}
+            AND mb.deleted = 0
+
+            <if test="category != null and category != '전체보기'">
+                AND q.category = #{category}
+            </if>
+
+            <if test="startDate != null">
+                AND mb.created_at <![CDATA[>=]]> #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND mb.created_at <![CDATA[<=]]> #{endDate}
+            </if>
+
+            <if test="keyword != null and keyword != ''">
+                <choose>
+                    <when test="searchType == 'title'">
+                        AND mb.title LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <when test="searchType == 'content'">
+                        AND mb.content LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <when test="searchType == 'writer'">
+                        AND m.nickname LIKE CONCAT('%', #{keyword}, '%')
+                    </when>
+
+                    <otherwise>
+                        AND (
+                            mb.title LIKE CONCAT('%', #{keyword}, '%')
+                            OR mb.content LIKE CONCAT('%', #{keyword}, '%')
+                        )
+                    </otherwise>
+                </choose>
+            </if>
+    </select>
+
+    <!-- 카테고리만 따로... 더 좋은 방법 없을까? -->
+    <select id="getCategoryById"
+            parameterType="Long"
+            resultType="String">
+        SELECT category
+            FROM qna_board
+            WHERE board_id=#{value}       
+    </select>
+
+    <!-- 게시글에 정보 등록 -->
+    <update id="updateQna"
+                parameterType="com.miles.beauminity.vo.qna_board.QnaBoardVO">
+        UPDATE qna_board
+        SET category = #{category}
+        WHERE board_id = #{boardId}
+    </update>
+
+    <!-- 해당 사용자의 게시글 가져오기-->
+    <select id="getCommunityList"
+            parameterType="string"
+            resultType="com.miles.beauminity.vo.qna_board.QnaBoardCompleteVO">
+        select mb.title, mb.content, mb.created_at, mb.view_cnt,mb.reply_cnt,qb.category,qb.board_id
+        from master_board mb
+        join qna_board qb
+            on mb.board_id = qb.board_id
+        where username=#{username} and deleted=0
+        ORDER BY mb.created_at DESC
+    </select>
+
+    <!-- 조회수 높은 꿀팁 리스트 가져오기-->
+    <select id="getTopTipList"
+            resultType="com.miles.beauminity.vo.qna_board.QnaBoardCompleteVO">
+        select mb.title,qb.board_id,mb.view_cnt
+        from master_board mb
+        join qna_board qb
+            on mb.board_id = qb.board_id
+        where qb.category="꿀팁" and deleted=0
+        ORDER BY mb.view_cnt DESC
+    </select>
+
+    <select id="getRecentqnaList"
+            resultType="com.miles.beauminity.vo.qna_board.QnaBoardCompleteVO">
+        select mb.title,mb.view_cnt,mb.content,mb.view_cnt,mb.reply_cnt,qb.board_id
+        from master_board mb
+        join qna_board qb
+            on mb.board_id = qb.board_id
+        where qb.category="질문" and deleted=0
+        ORDER BY mb.created_at DESC
+    </select>
+
+    <!-- 게시글에 피부타입, 퍼스널컬러, 나이대를 가져오기 위해 멤버 테이블에서 조회  -->
+    <select id="getMemberInfoFromMember"
+            parameterType="String"
+            resultType="com.miles.beauminity.vo.login.MemberVO">
+        SELECT birthday, skin_type, personal_color
+        FROM member
+        WHERE nickname = #{value}
+    </select>
+
+
+</mapper>

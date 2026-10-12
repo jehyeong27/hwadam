@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화담 : 글쓰기</title>
+    
+    <link rel="stylesheet" th:href="@{/css/community/community_write.css}">
+    <link rel="stylesheet" th:href="@{/css/common/header.css}">
+    <link rel="stylesheet" th:href="@{/css/common/main.css}">
+    <link rel="stylesheet" th:href="@{/css/common/footer.css}">
+    <link rel="icon" type="image/png" th:href="@{/images/common/icon.png}">
+</head>
+<body>
+
+    <header th:replace="~{layout/header :: headerFragment}"></header>
+
+    <main>
+        <section class="write-container">
+            <div class="section-header">
+                <h2>글쓰기</h2>
+                <p class="section-desc">
+                    궁금한 점이나 뷰티 정보를 자유롭게 공유해보세요.
+                </p>
+            </div>
+
+            <form th:action="@{/community}" method="POST" enctype="multipart/form-data">
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="post-category">카테고리</label>
+                        <select id="post-category" name="category" class="form-control" required>
+                            <option value="" disabled selected>카테고리를 선택해주세요</option>
+                            <option value="자유">자유</option>
+                            <option value="질문">질문</option>
+                            <option value="꿀팁">꿀팁</option>
+                            <option id='notice-op' value="공지사항">공지사항</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="post-title">제목</label>
+                    <input type="text" id="post-title" name="title" class="form-control" placeholder="질문 내용을 직관적으로 알 수 있도록 제목을 작성해 주세요." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="post-content">내용</label>
+                    <textarea id="post-content" name="content" class="form-control" placeholder="피부 타입, 사용 중인 제품 루틴 등을 자세히 적어주시면 더 정확한 답변을 얻을 수 있습니다.&#10;(비방이나 홍보성 글은 제한될 수 있습니다.)" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 첨부</label>
+                    <label for="file-input" class="file-upload-wrapper" id="dropZone">
+                        <input type="file" id="file-input" multiple name="files" accept=".jpg,.jpeg,.png,.gif,.webp">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">클릭하거나 파일을 여기로 드래그하여 업로드</span>
+                        <span class="upload-hint">JPG, PNG, GIF 파일 가능 (최대 10MB)</span>
+                    </label>
+
+                    <!-- 이미지 미리보기 -->
+                    <div id="previewList" class="preview-list"></div>
+
+                    <!-- 일반 파일 목록 -->
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" th:onclick="|location.href='@{/community}'|">취소하기</button>
+                    <button type="submit" class="btn btn-submit">게시하기</button>
+                </div>
+
+            </form>
+        </section>
+    </main>
+    <script th:src="@{/js/qna/qna_write_file.js}"></script>
+    <script th:src="@{/js/qna/qna_check_role.js}"></script>
+    <footer th:replace="~{layout/footer :: footerFragment}"></footer>
+
+    
+
+</body>
+</html>
